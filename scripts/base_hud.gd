@@ -4,7 +4,7 @@ extends Control
 const PANEL_W := 100.0
 const PANEL_MARGIN := 3.0
 const HEADER_H := 15.0
-const ROW_H := 26.0
+const ROW_H := 22.0
 const ROW_GAP := 3.0
 const ROW_PAD := 4.0
 const FOOTER_H := 26.0
@@ -119,28 +119,13 @@ func _draw() -> void:
 
 		# 名字 + 数量
 		var name_text: String = "-" if data == null else data.short_name
-		draw_string(font, Vector2(row.position.x + 26.0, row.position.y + 11.0), name_text,
+		draw_string(font, Vector2(row.position.x + 26.0, row.position.y + 13.0), name_text,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.96, 0.96, 0.92, 0.95))
 		var stock_text := "x%d" % _builder.stock_of(i)
 		var stock_size := font.get_string_size(stock_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 7)
 		draw_string(font, Vector2(row.position.x + row.size.x - stock_size.x - 4.0,
-			row.position.y + 11.0), stock_text,
+			row.position.y + 13.0), stock_text,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.86, 0.9, 1.0, 0.95))
-
-		# 第二行：占地尺寸
-		if data != null:
-			var fp := data.footprint
-			var size_text := "%dx%d" % [fp.x, fp.y]
-			draw_string(font, Vector2(row.position.x + 26.0, row.position.y + 21.0), size_text,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.7, 0.74, 0.82, 0.85))
-
-	# 悬停到已放置家具时，在行下面标等级
-	var hovered: Node2D = _builder.piece_at(_builder.mouse_cell())
-	if hovered != null and _selected >= 0:
-		var row := _slot_rect(_selected)
-		var lv := "LV%d/%d" % [hovered.level, hovered.data.max_level]
-		draw_string(font, Vector2(row.position.x + row.size.x - 30.0, row.position.y + 21.0), lv,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(1.0, 0.9, 0.55, 0.95))
 
 	# ===== 操作提示：放在左下角的空白处 =====
 	var lines := [
