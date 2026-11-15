@@ -46,7 +46,7 @@ func _draw() -> void:
 		return
 
 	# 底部底板
-	var bar_h := 34.0
+	var bar_h := 40.0
 	var bar_y := screen.y - bar_h
 	draw_rect(Rect2(0, bar_y, screen.x, bar_h), Color(0.06, 0.07, 0.09, 0.82))
 	draw_line(Vector2(0, bar_y), Vector2(screen.x, bar_y), Color(1, 1, 1, 0.12), 1.0)
@@ -54,7 +54,7 @@ func _draw() -> void:
 	# 槽位
 	var types: Array = _builder.types
 	var x := 8.0
-	var y := bar_y + 5.0
+	var y := bar_y + 4.0
 	for i in types.size():
 		var rect := Rect2(x, y, SLOT, SLOT)
 		var is_selected: bool = i == _selected
@@ -64,8 +64,12 @@ func _draw() -> void:
 		var data: BaseFurniture = types[i]
 		if data != null and data.texture != null:
 			var tex: Texture2D = data.texture
-			var pos := rect.position + (Vector2(SLOT, SLOT) - tex.get_size()) * 0.5
-			draw_texture_rect(tex, Rect2(pos, tex.get_size()), false)
+			# 图标按槽位等比缩放（床这种 1x2 的也能塞进来）
+			var tex_size := tex.get_size()
+			var fit := minf((SLOT - 4.0) / tex_size.x, (SLOT - 4.0) / tex_size.y)
+			var draw_size := tex_size * fit
+			var pos := rect.position + (Vector2(SLOT, SLOT) - draw_size) * 0.5
+			draw_texture_rect(tex, Rect2(pos, draw_size), false)
 
 		var num := str(i + 1)
 		draw_string(font, rect.position + Vector2(1, 7), num,
@@ -81,7 +85,7 @@ func _draw() -> void:
 		level_text = "  LV%d/%d" % [hovered.level, hovered.data.max_level]
 	draw_string(font, Vector2(x + 6.0, y + 9.0), name_text + level_text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.95, 0.95, 0.9, 0.95))
-	draw_string(font, Vector2(x + 6.0, y + 20.0), "1-4 SELECT  LMB BUILD  RMB REMOVE  U UPGRADE  DEL CLEAR",
+	draw_string(font, Vector2(8.0, y + 33.0), "1-5 SELECT   LMB BUILD   RMB REMOVE   U UPGRADE   DEL CLEAR",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.8, 0.85, 0.95, 0.8))
 
 	# 放置数量

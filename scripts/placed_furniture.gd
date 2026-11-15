@@ -15,7 +15,7 @@ func setup(furniture: BaseFurniture, at_cell: Vector2i, start_level := 1) -> voi
 	cell = at_cell
 	level = clampi(start_level, 1, furniture.max_level)
 
-	position = Vector2(at_cell) * TILE + Vector2(TILE, TILE) * 0.5
+	position = Vector2(at_cell) * TILE + Vector2(furniture.footprint) * TILE * 0.5
 
 	if _sprite == null:
 		_sprite = Sprite2D.new()
@@ -40,7 +40,8 @@ func upgrade() -> bool:
 func _draw() -> void:
 	if data == null:
 		return
-	# 等级标记：底部小方块
+	# 等级标记：贴在这个家具占地的底部
+	var bottom := float(data.footprint.y) * TILE * 0.5 - 4.0
+	var left := -float(data.footprint.x) * TILE * 0.5 + 2.0
 	for i in level:
-		var x := -7.0 + float(i) * 4.0
-		draw_rect(Rect2(x, 7.0, 3.0, 2.0), Color(0.95, 0.84, 0.42, 0.95))
+		draw_rect(Rect2(left + float(i) * 4.0, bottom, 3.0, 2.0), Color(0.95, 0.84, 0.42, 0.95))

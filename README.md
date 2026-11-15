@@ -101,6 +101,7 @@ C:\game\test
 │   ├─ make_grass.lua         生成 16 块草皮瓦片 + 2 块井盖
 │   ├─ make_concrete.lua      生成 16 块水泥瓦片（楼顶基地）
 │   ├─ make_furniture.lua     生成 4 件基地家具贴图
+│   ├─ make_bed.lua           生成床（16×32）
 │   ├─ make_base_map.py       生成基地 TileSet + base.tsx/base.tmj
 │   ├─ make_hud.lua           生成血条外框与填充图
 │   ├─ make_weapon_icon.lua   生成武器图标（霰弹枪 20×20）
@@ -584,8 +585,10 @@ after 3.5s-> 0 只（确认不再刷）
   退出建造模式再换回空手。
 - **按 Tab 进 / 出建造模式**：不按 Tab 时就是纯走路，底部只有一行 `TAB - BUILD` 提示；
   按 Tab 才弹出底部家具栏，此时才能选家具、放置、拆除、升级。
-- 家具数据是 `BaseFurniture` 资源（`assets/base/*.tres`）：名字、贴图、`max_level`。
-  现有 4 件：工作台 / 储物箱 / 发电机 / 盆栽。
+- 家具数据是 `BaseFurniture` 资源（`assets/base/*.tres`）：名字、贴图、`footprint`（占地几格）、`max_level`。
+  现有 5 件：工作台 / 储物箱 / 发电机 / 盆栽（都是 1×1）、**床（1×2）**。
+- 多格占地是通用的：`cells_for()` 把占地展开成格子列表，放/拆/预览/占位判断都按整块算，
+  1×2 的床会同时占住上下两格，和别的家具重叠会被拒绝。
 - `base_builder.gd`：
   - **1–4** 选家具（底部 HUD 高亮），鼠标位置显示半透明预览（绿色可放、红色不可放）；
   - **左键**放置、**右键**拆除、**U** 升级（最高 3 级，底部小方块表示等级）；

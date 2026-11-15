@@ -66,6 +66,28 @@ func piece_count() -> int:
 	return _pieces.size()
 
 
+## 一个家具从 cell 开始覆盖的所有格子
+func cells_for(cell: Vector2i, data: BaseFurniture) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for dy in data.footprint.y:
+		for dx in data.footprint.x:
+			cells.append(cell + Vector2i(dx, dy))
+	return cells
+
+
+## 这个位置能不能放（整块占地都要空着、可建）
+func can_place(cell: Vector2i, type_index := -1) -> bool:
+	if types.is_empty():
+		return false
+	if type_index < 0:
+		type_index = selected
+	var data: BaseFurniture = types[clampi(type_index, 0, types.size() - 1)]
+	for c in cells_for(cell, data):
+		if not is_buildable(c) or _pieces.has(c):
+			return false
+	return true
+
+
 ## 在某格放一个家具；返回是否成功
 func place(cell: Vector2i, type_index := -1, start_level := 1) -> bool:
 	if types.is_empty():
@@ -73,13 +95,15 @@ func place(cell: Vector2i, type_index := -1, start_level := 1) -> bool:
 	if type_index < 0:
 		type_index = selected
 	type_index = clampi(type_index, 0, types.size() - 1)
-	if not is_buildable(cell) or _pieces.has(cell):
+	if not can_place(cell, type_index):
 		return false
 
+	var data: BaseFurniture = types[type_index]
 	var piece: Node2D = PLACED_SCENE.instantiate()
 	add_child(piece)
-	piece.setup(types[type_index], cell, start_level)
-	_pieces[cell] = piece
+	piece.setup(data, cell, start_level)
+	for c in cells_for(cell, data):
+		_pieces[c] = piece
 	layout_changed.emit()
 	_save_layout()
 	return true
@@ -90,8 +114,10 @@ func remove(cell: Vector2i) -> bool:
 	var piece: Node2D = _pieces.get(cell, null)
 	if piece == null:
 		return false
+	for c: Vector2i in _pieces.keys():
+		if _pieces[c] == piece:
+			_pieces.erase(c)
 	piece.queue_free()
-	_pieces.erase(cell)
 	layout_changed.emit()
 	_save_layout()
 	return true
@@ -171,14 +197,19 @@ func _process(_delta: float) -> void:
 		return
 
 	var cell := _mouse_cell()
-	# 鼠标不在平台格子里（比如飘到外面的城市上）就不显示预览
-	_ghost.visible = _in_board(cell)
-	if not _ghost.visible:
+	var data := selected_type()
+
+	# 整块占地都要在平台范围内，否则不显示预览
+	var inside := true
+	for c in cells_for(cell, data):
+		if c.x < 0 or c.y < 0 or c.x >= _board.x or c.y >= _board.y:
+			inside = false
+	_ghost.visible = inside
+	if not inside:
 		return
 
-	_ghost.position = _cell_center(cell)
-	_ghost.modulate = Color(1, 1, 1, 0.55) if is_buildable(cell) and not _pieces.has(cell) \
-		else Color(1, 0.45, 0.42, 0.5)
+	_ghost.position = Vector2(cell) * TILE + Vector2(data.footprint) * TILE * 0.5
+	_ghost.modulate = Color(1, 1, 1, 0.55) if can_place(cell) else Color(1, 0.45, 0.42, 0.5)
 
 
 ## 是不是在 30x30 平台范围内
@@ -211,7 +242,7 @@ func _update_ghost() -> void:
 
 func _load_types() -> void:
 	# 固定顺序，保证 1-4 对应工作台 / 储物箱 / 发电机 / 盆栽
-	for file in ["workbench", "storage", "generator", "plant"]:
+	for file in ["workbench", "storage", "generator", "plant", "bed"]:
 		var res: BaseFurniture = load("res://assets/base/%s.tres" % file)
 		if res != null:
 			types.append(res)

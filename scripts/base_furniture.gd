@@ -6,6 +6,8 @@ extends Resource
 ## HUD 上显示的英文短名（默认字体没有中文）
 @export var short_name := "FURNITURE"
 @export var texture: Texture2D
+## 占几格（宽 x 高），比如床是 1x2
+@export var footprint := Vector2i(1, 1)
 ## 最高等级（升级只影响外观和等级标记，数值系统以后再加）
 @export var max_level := 3
 ## 每级做什么（可选说明，给以后接数值用）
