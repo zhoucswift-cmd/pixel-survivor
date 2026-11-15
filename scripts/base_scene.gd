@@ -154,9 +154,13 @@ func _on_craft_requested(out_id: String) -> void:
 		return
 	gs.spend(recipe["cost"])
 
-	if out_id == "bed":
-		var index: int = _builder.types.find(_bed_type())
-		_builder.add_stock(index, 1)
+	var furn: String = recipe.get("furniture", "")
+	if furn != "":
+		# 家具/建筑：加到建造库存里
+		for i in _builder.types.size():
+			if _builder.types[i].short_name == furn:
+				_builder.add_stock(i, 1)
+				break
 	else:
 		gs.add_owned(out_id)
 

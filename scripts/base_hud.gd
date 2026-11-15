@@ -19,7 +19,8 @@ const RECIPES := {
 		{"out": "casual_shoes", "name": "CASUAL SHOES", "tex": "res://assets/base/icon_boots.png", "tint": Color8(126, 84, 52), "cost": {"cloth": 5, "rope": 3}, "desc": ["Light shoes, good", "for walking around."]},
 	],
 	"carpentry": [
-		{"out": "bed", "name": "BED", "tex": "res://assets/base/bed.png", "cost": {"cloth": 2, "rope": 1}, "desc": ["A place to sleep.", "Restores your", "energy overnight."]},
+		{"out": "bed", "name": "BED", "tex": "res://assets/base/bed.png", "cost": {"cloth": 2, "rope": 1}, "desc": ["A place to sleep.", "Restores your", "energy overnight."], "furniture": "BED"},
+		{"out": "tree", "name": "TREE", "tex": "res://assets/base/tree.png", "cost": {"wood": 3}, "desc": ["A small street tree.", "Greenery for the", "rooftop."], "furniture": "TREE"},
 	],
 }
 

@@ -475,7 +475,7 @@ func _update_ghost() -> void:
 
 func _load_types() -> void:
 	# 固定顺序，保证 1-4 对应家具
-	for file in ["bed", "toolbench", "clothingbench", "carpentrybench"]:
+	for file in ["bed", "tree", "toolbench", "clothingbench", "carpentrybench"]:
 		var res: BaseFurniture = load("res://assets/base/%s.tres" % file)
 		if res != null:
 			types.append(res)

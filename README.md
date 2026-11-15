@@ -106,6 +106,7 @@ C:\game\test
 │   ├─ make_concrete.lua      生成 16 块水泥瓦片（楼顶基地）
 │   ├─ make_furniture.lua     生成 4 件基地家具贴图
 │   ├─ make_benches.lua       生成三个工作台（工具/服装/木工，32×16）
+│   ├─ make_tree.lua          生成小街道绿化树（1×3 = 16×48）
 │   ├─ make_resources.lua     生成布料 / 绳子 / 石头 / 木头掉落物
 │   ├─ fix_legs.py            把角色表的腿加长一行、脚改小（靴子缩一行 + 削窄）
 │   ├─ make_hydrant.lua       生成消防栓（16×16）
@@ -601,7 +602,7 @@ after 3.5s-> 0 只（确认不再刷）
 - **按 Tab 进 / 出建造模式**：不按 Tab 时就是纯走路，底部只有一行 `TAB - BUILD` 提示；
   按 Tab 才弹出底部家具栏，此时才能选家具、放置、拆除、升级。
 - 家具数据是 `BaseFurniture` 资源（`assets/base/*.tres`）：名字、贴图、`footprint`（占地几格）、`max_level`。
-  目前四件：**床（1×2，3 级）**、**工具与武器台 Tools & Weapons Workbench**、
+  目前五件：**床（1×2，3 级）**、**小街道绿化树（1×3）**、**工具与武器台 Tools & Weapons Workbench**、
   **服装制作台 Tailoring Workbench**、**木工台 Carpentry Workbench**
   （三个台子都是 2×1、1 级，用 craft_category 区分能做什么：	ools / clothing / carpentry）。
 - 多格占地是通用的：`cells_for()` 把占地展开成格子列表，放/拆/预览/占位判断都按整块算，
