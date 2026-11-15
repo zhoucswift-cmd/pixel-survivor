@@ -8,15 +8,21 @@ var cloth := 0
 var rope := 0
 
 ## 装备栏：每个槽位放的是哪件物品 id（空字符串 = 没穿）
+## 开局就穿着布帽 / T恤 / 长裤 / 布鞋
 var equipped := {
-	"hat": "",
-	"jacket": "",
-	"pants": "",
-	"boots": "",
+	"hat": "cloth_hat",
+	"jacket": "tshirt",
+	"pants": "casual_pants",
+	"boots": "casual_shoes",
 }
 
-## 已经做出来的可穿戴物（id -> true）
-var owned := {}
+## 已经做出来的可穿戴物（id -> true）；这四件开局就有
+var owned := {
+	"cloth_hat": true,
+	"tshirt": true,
+	"casual_pants": true,
+	"casual_shoes": true,
+}
 
 ## 每件装备的防护值 / 耐久上限
 const EQUIP_STATS := {
@@ -28,6 +34,13 @@ const EQUIP_STATS := {
 
 ## 每件装备当前耐久（id -> int）
 var durability := {}
+
+
+func _ready() -> void:
+	# 开局/重新进游戏时把身上的装备耐久补满
+	for id: String in owned:
+		if EQUIP_STATS.has(id):
+			durability[id] = int(EQUIP_STATS[id]["dur"])
 
 ## 可穿戴物品的颜色（换装时就按这个颜色刷角色贴图）
 const ITEM_COLORS := {
