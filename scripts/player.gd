@@ -19,6 +19,8 @@ signal died
 const SHEET_PATH := "res://assets/character_sheet.png"
 ## 带枪（上下瞄时用原始姿势，枪已经画在身体上）
 const SHEET_BAKED_PATH := "res://assets/character_sheet_gun.png"
+## 空手（基地里用：身体 + 手，没有枪）
+const SHEET_UNARMED_PATH := "res://assets/character_sheet_unarmed.png"
 const FRAME_SIZE := Vector2i(32, 32)
 const WALK_FPS := 10.0
 const SHOOT_FPS := 12.0
@@ -73,7 +75,7 @@ var _cooldown := 0.0
 var _invulnerable := 0.0
 var _frames_plain: SpriteFrames
 var _frames_baked: SpriteFrames
-var _using_baked := false
+var _frames_unarmed: SpriteFrames
 var _reloading := false
 var _reload_left := 0.0
 var _muzzle_scene: PackedScene = preload("res://scenes/muzzle_flash.tscn")
@@ -99,6 +101,7 @@ func _ready() -> void:
 
 	_frames_plain = _build_sprite_frames(SHEET_PATH)
 	_frames_baked = _build_sprite_frames(SHEET_BAKED_PATH)
+	_frames_unarmed = _build_sprite_frames(SHEET_UNARMED_PATH)
 	_sprite.sprite_frames = _frames_plain
 	_sprite.play("idle_down")
 	_sprite.animation_finished.connect(_on_animation_finished)
@@ -265,14 +268,18 @@ func _apply_held_texture() -> void:
 	_gun.offset = -_data.held_pivot
 
 
-## 切换身体用哪套帧（带枪 / 不带枪）
-func _set_body_baked(baked: bool) -> void:
-	if baked == _using_baked:
+## 切换身体用哪套帧（无枪 / 带枪 / 空手）
+func _set_body_sheet(frames: SpriteFrames) -> void:
+	if frames == null or frames == _sprite.sprite_frames:
 		return
-	_using_baked = baked
-	_sprite.sprite_frames = _frames_baked if baked else _frames_plain
+	_sprite.sprite_frames = frames
 	if _sprite.animation != "":
 		_sprite.play(_sprite.animation)
+
+
+## 当前是不是用的“枪画在身体上”那套帧（枪口火焰位置要用）
+func using_baked() -> bool:
+	return _sprite.sprite_frames == _frames_baked
 
 
 ## 开关武器：基地里关掉（不能开枪、不显示旋转枪、只播走路动画）
@@ -281,8 +288,8 @@ func set_armed(value: bool) -> void:
 	if _gun != null:
 		_gun.visible = armed and _gun.texture != null
 	if not armed:
-		# 用原画身体帧（枪和手都画在里面），旋转枪就不需要了
-		_set_body_baked(true)
+		# 基地里空手：身体 + 手，没有枪
+		_set_body_sheet(_frames_unarmed)
 
 
 ## 持枪那只手固定，枪身绕它转到鼠标方向。
@@ -290,6 +297,13 @@ func set_armed(value: bool) -> void:
 func _update_gun() -> void:
 	if _data == null:
 		return
+
+	if not armed:
+		# 基地里空手：用无枪的身体帧，隐藏旋转枪
+		_set_body_sheet(_frames_unarmed)
+		_gun.visible = false
+		return
+
 	var aim := shot_direction()
 	var mirror := aim.x < 0.0
 	_gun.flip_h = mirror
@@ -308,7 +322,7 @@ func _update_gun() -> void:
 
 	# 上下瞄时换成“枪已经画在身体上”的那套帧，避免旋转的枪压在背上/肚子上
 	var vertical := absf(aim.y) > absf(aim.x)
-	_set_body_baked(vertical)
+	_set_body_sheet(_frames_baked if vertical else _frames_plain)
 
 	# 竖向时隐藏旋转枪（身体帧里已经有枪和手了），横向才显示
 	_gun.visible = not vertical and _gun.texture != null
@@ -425,7 +439,7 @@ func _spawn_tracer(from_world: Vector2, to_world: Vector2) -> void:
 
 func _spawn_muzzle_flash(aim_dir: Vector2) -> void:
 	var flash: Node2D = _muzzle_scene.instantiate()
-	if _using_baked:
+	if using_baked():
 		# 原画姿势：火焰放在那张帧里枪口的位置，画在最上层（枪口在身体轮廓外）
 		flash.position = BAKED_MUZZLE.get(_facing, HAND_OFFSET + aim_dir * _data.muzzle_distance)
 		flash.z_index = 10

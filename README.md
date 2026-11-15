@@ -61,6 +61,7 @@ C:\game\test
 │   ├─ character.aseprite     ★ 角色源文件（3 图层 / 28 帧 / 12 个 tag）
 │   ├─ character_sheet.png    角色精灵表（896×32，28 帧，无枪）
 │   ├─ character_sheet_gun.png 带枪版精灵表（上下瞄准时用）
+│   ├─ character_sheet_unarmed.png 空手版精灵表（基地里用）
 │   ├─ muzzle_flash.aseprite  ★ 枪口火焰源文件（3 帧）
 │   ├─ muzzle_flash.png       火焰精灵表（72×24，3 帧）
 │   ├─ crosshair.aseprite     ★ 准心源文件（2 帧：常态 / 张开）
@@ -103,6 +104,7 @@ C:\game\test
 │   ├─ make_hud.lua           生成血条外框与填充图
 │   ├─ make_weapon_icon.lua   生成武器图标（霰弹枪 20×20）
 │   ├─ export_nogun.lua       导出不带 gun 图层的角色精灵表
+│   ├─ make_unarmed_sheet.py  合成空手版角色表（身体 + 手，没有枪）
 │   ├─ make_rifle_icon.lua    生成突击步枪图标（20×20）
 │   ├─ make_zombie.lua        生成僵尸 4 方向动画
 │   ├─ make_zombie_death.lua  生成僵尸爆血死亡动画
@@ -139,6 +141,7 @@ C:\game\test
 |---|---|---|---|---|
 | `assets/character_sheet.png` | 896×32 | 32×32 × 28 帧（横排） | 玩家身体（**无枪**，横向瞄准时用） | `character.aseprite` |
 | `assets/character_sheet_gun.png` | 896×32 | 同上 | 玩家身体（**带枪**，上下瞄准时用） | `character.aseprite` |
+| `assets/character_sheet_unarmed.png` | 896×32 | 同上 | 玩家身体（**空手**，基地里用） | `tools/make_unarmed_sheet.py` |
 | `assets/weapons/shotgun_held.png` | 32×32 | 单帧 | 手持霰弹枪（含手，绕握把旋转） | `character.aseprite` 的 `gun` 层 |
 | `assets/zombie_sheet.png` | 1024×32 | 32×32 × 32 帧 | 僵尸 4 方向 × 8 帧（idle 1 + walk 4 + attack 3） | `zombie.aseprite` |
 | `assets/zombie_death.png` | 240×48 | 48×48 × 5 帧 | 僵尸死亡爆血 | `zombie_death.aseprite` |
@@ -565,8 +568,9 @@ after 3.5s-> 0 只（确认不再刷）
 
 ### 建造 / 摆放家具
 
-- **基地里不能使用武器**：`player.set_armed(false)` 之后不能开枪、不能换弹、不跟鼠标瞄准，
-  身体用带枪的走路帧（`walk_*` / `idle_*`），朝向跟着移动方向，就是一个普通的走路角色。
+- **基地里不能使用武器、手里也没有枪**：`player.set_armed(false)` 之后不能开枪、不能换弹、
+  不跟鼠标瞄准，朝向跟着移动方向；身体换成**空手**那套帧（`character_sheet_unarmed.png`，
+  身体 + 手、没有枪），就是普通走路动画。
 - **按 Tab 进 / 出建造模式**：不按 Tab 时就是纯走路，底部只有一行 `TAB - BUILD` 提示；
   按 Tab 才弹出底部家具栏，此时才能选家具、放置、拆除、升级。
 - 家具数据是 `BaseFurniture` 资源（`assets/base/*.tres`）：名字、贴图、`max_level`。
