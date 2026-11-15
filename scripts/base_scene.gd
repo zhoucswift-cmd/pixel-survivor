@@ -151,9 +151,9 @@ func _bed_type() -> BaseFurniture:
 func _craft_label(cat: String) -> String:
 	match cat:
 		"tools":
-			return "CRAFT TOOLS & WEAPON"
+			return "CRAFT TOOLS & WEAPONS"
 		"clothing":
-			return "CRAFT CLOTHING"
+			return "CRAFT TAILORING"
 		"carpentry":
 			return "CRAFT CARPENTRY"
 	return "CRAFT"

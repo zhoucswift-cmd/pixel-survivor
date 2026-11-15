@@ -220,8 +220,10 @@ func _draw() -> void:
 
 			# 名字 + 数量
 			var name_text: String = "-" if data == null else data.short_name
+			# 名字太长就缩小一号，别和右边的数量撞上
+			var name_size := 7 if name_text.length() <= 12 else 5
 			draw_string(font, Vector2(row.position.x + 26.0, row.position.y + 13.0), name_text,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.96, 0.96, 0.92, 0.95))
+				HORIZONTAL_ALIGNMENT_LEFT, -1, name_size, Color(0.96, 0.96, 0.92, 0.95))
 			var stock_text := "x%d" % _builder.stock_of(i)
 			var stock_size := font.get_string_size(stock_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 7)
 			draw_string(font, Vector2(row.position.x + row.size.x - stock_size.x - 4.0,
