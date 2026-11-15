@@ -126,6 +126,11 @@ func rotated_cell(cell: Vector2i, data: BaseFurniture, old_steps: int, new_steps
 	return Vector2i(roundi(ideal.x), roundi(ideal.y))
 
 
+## 这块占地是否盖住 target 这一格
+func cells_of_contain(cell: Vector2i, data: BaseFurniture, steps: int, target: Vector2i) -> bool:
+	return cells_for(cell, data, steps).has(target)
+
+
 ## 一个家具从 cell 开始覆盖的所有格子
 func cells_for(cell: Vector2i, data: BaseFurniture, steps := 0) -> Array[Vector2i]:
 	var fp := rotated_footprint(data, steps)
@@ -211,7 +216,7 @@ func upgrade(cell: Vector2i) -> bool:
 	return true
 
 
-## 旋转：鼠标指着家具就转它，指着空地就转“下一件”的朝向
+## 旋转：鼠标指着家具就转它（留在鼠标下面转），指着空地就转“下一件”的朝向
 func rotate_at(cell: Vector2i, direction: int) -> void:
 	var piece: Node2D = _pieces.get(cell, null)
 	if piece == null:
@@ -220,34 +225,37 @@ func rotate_at(cell: Vector2i, direction: int) -> void:
 		_placing_steps = posmod(_placing_steps + direction, 4)
 		return
 
-	var origin: Vector2i = piece.cell
 	var data: BaseFurniture = piece.data
+	var index: int = types.find(data)
 	var old_steps: int = int(piece.steps)
 	var steps := posmod(old_steps + direction, 4)
 	var level: int = piece.level
+	var origin: Vector2i = piece.cell
 
 	_unregister(piece)
 	piece.queue_free()
 
-	# 先按“绕中心转”算新锚点，转不开再退回原来的格子
-	var turned := rotated_cell(origin, data, old_steps, steps)
-	if can_place(turned, types.find(data), steps):
-		origin = turned
-
-	if can_place(origin, types.find(data), steps):
-		var fresh: Node2D = PLACED_SCENE.instantiate()
-		add_child(fresh)
-		fresh.setup(data, origin, level, steps)
-		_register(fresh, origin, steps, data)
+	# 让转完的家具仍然盖住鼠标所在的那一格（这样它就一直待在鼠标下面），
+	# 其次退回原格子，都不行就保持原样。
+	var spot := anchor_for(_mouse_cell(), data, steps)
+	if not can_place(spot, index, steps) or not cells_of_contain(spot, data, steps, _mouse_cell()):
+		spot = origin
+	if not can_place(spot, index, steps):
+		spot = rotated_cell(origin, data, old_steps, steps)
+	if not can_place(spot, index, steps):
+		_spawn(data, origin, level, old_steps, index)
 	else:
-		# 转不开就放回原位
-		var back: Node2D = PLACED_SCENE.instantiate()
-		add_child(back)
-		back.setup(data, origin, level, steps - direction if direction != 0 else 0)
-		_register(back, origin, int(back.steps), data)
+		_spawn(data, spot, level, steps, index)
 
 	layout_changed.emit()
 	_save_layout()
+
+
+func _spawn(data: BaseFurniture, cell: Vector2i, level: int, steps: int, index: int) -> void:
+	var piece: Node2D = PLACED_SCENE.instantiate()
+	add_child(piece)
+	piece.setup(data, cell, level, steps)
+	_register(piece, cell, steps, data)
 
 
 ## 这格能不能建：在地图内、不在设备瓦片上
