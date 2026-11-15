@@ -1,0 +1,8 @@
+# 文本统一用 LF 存进仓库
+* text=auto eol=lf
+
+# 二进制资源
+*.png binary
+*.aseprite binary
+*.gif binary
+*.jpg binary

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponType" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapon_type.gd" id="1_type"]
+[ext_resource type="Texture2D" path="res://assets/ui/rifle_icon.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_type")
+display_name = "突击步枪"
+short_name = "RIFLE"
+icon = ExtResource("2_icon")
+damage = 20.0
+fire_rate = 4.8
+magazine = 20
+range_tiles = 8
+reload_time = 1.5
+show_crosshair = true
+automatic = true
+multi_hit = false
+cone_degrees = 20.0
+tracer = true
+held_texture = ExtResource("2_icon")
+held_pivot = Vector2(5, 12)
+muzzle_distance = 13.0
+show_cone = false
+aim_line = true

@@ -1,0 +1,15 @@
+# Godot 4 导入缓存 / 编辑器状态（不要提交）
+.godot/
+
+# 导出产物
+build/
+dist/
+export_presets.cfg.bak
+
+# 系统 / 编辑器杂项
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.tmp
