@@ -28,6 +28,21 @@ const FRAME_SIZE := Vector2i(32, 32)
 const SHIRT_DARK := Color8(40, 72, 128)
 const SHIRT_MID := Color8(63, 111, 181)
 const SHIRT_LIGHT := Color8(104, 152, 220)
+## 裤子（默认深蓝，没穿衣服时改成红内裤）
+const PANTS_MID := Color8(54, 62, 92)
+const PANTS_DARK := Color8(40, 46, 70)
+## 没穿衣服时的皮肤色阶
+const SKIN_DARK := Color8(214, 158, 118)
+const SKIN_MID := Color8(242, 196, 158)
+const SKIN_LIGHT := Color8(252, 216, 182)
+## 红内裤
+const BRIEF := Color8(198, 48, 48)
+const BRIEF_DARK := Color8(150, 32, 34)
+## 靴子（没穿衣服时变回皮肤，等于光脚）
+const BOOT_MID := Color8(92, 60, 38)
+const BOOT_DARK := Color8(68, 44, 28)
+## 腰带（没穿衣服时变成内裤的松紧带）
+const BELT := Color8(202, 162, 62)
 const WALK_FPS := 10.0
 const SHOOT_FPS := 12.0
 const DIRS := {"down": 0, "up": 7, "left": 14, "right": 21}
@@ -84,7 +99,7 @@ var _frames_baked: SpriteFrames
 var _frames_unarmed: SpriteFrames
 var _frames_build: SpriteFrames
 ## 当前衣服颜色（a=0 表示默认蓝）
-var _look_base := Color(0, 0, 0, 0)
+var _look_base := Color(0, 0, 0, -1)
 ## 染色后的站立表（背包预览用）
 var look_sheet: Texture2D = null
 ## 基地建造模式：手里拿蓝图和扳手
@@ -589,12 +604,11 @@ func apply_look(base: Color) -> void:
 	if base == _look_base:
 		return
 	_look_base = base
-	var use := base.a > 0.0
-	look_sheet = _recolor_texture(load(SHEET_PATH), base) if use else load(SHEET_PATH)
-	_frames_plain = _build_sprite_frames(SHEET_PATH, base if use else Color(0, 0, 0, 0))
-	_frames_baked = _build_sprite_frames(SHEET_BAKED_PATH, base if use else Color(0, 0, 0, 0))
-	_frames_unarmed = _build_sprite_frames(SHEET_UNARMED_PATH, base if use else Color(0, 0, 0, 0))
-	_frames_build = _build_sprite_frames(SHEET_BUILD_PATH, base if use else Color(0, 0, 0, 0))
+	look_sheet = _recolor_texture(load(SHEET_PATH), base)
+	_frames_plain = _build_sprite_frames(SHEET_PATH, base)
+	_frames_baked = _build_sprite_frames(SHEET_BAKED_PATH, base)
+	_frames_unarmed = _build_sprite_frames(SHEET_UNARMED_PATH, base)
+	_frames_build = _build_sprite_frames(SHEET_BUILD_PATH, base)
 
 	# 重新套用当前应该显示的贴图
 	if not armed:
@@ -619,14 +633,27 @@ func _recolor_texture(texture: Texture2D, base: Color) -> Texture2D:
 		img.convert(Image.FORMAT_RGBA8)
 	var data: PackedByteArray = img.get_data()
 
-	var dark := base.darkened(0.32)
-	var light := base.lightened(0.28)
-	# 用整数当 key（Array 在字典里是按引用比较的，不能直接拿来当 key）
-	var table := {
-		_color_key(SHIRT_DARK): [dark.r8, dark.g8, dark.b8],
-		_color_key(SHIRT_MID): [base.r8, base.g8, base.b8],
-		_color_key(SHIRT_LIGHT): [light.r8, light.g8, light.b8],
-	}
+	# 没穿衣服：光膀子 + 红内裤；穿了衣服：刷成衣服的颜色
+	var table := {}
+	if base.a <= 0.0:
+		table = {
+			_color_key(SHIRT_DARK): [SKIN_DARK.r8, SKIN_DARK.g8, SKIN_DARK.b8],
+			_color_key(SHIRT_MID): [SKIN_MID.r8, SKIN_MID.g8, SKIN_MID.b8],
+			_color_key(SHIRT_LIGHT): [SKIN_LIGHT.r8, SKIN_LIGHT.g8, SKIN_LIGHT.b8],
+			_color_key(PANTS_MID): [BRIEF.r8, BRIEF.g8, BRIEF.b8],
+			_color_key(PANTS_DARK): [BRIEF_DARK.r8, BRIEF_DARK.g8, BRIEF_DARK.b8],
+			_color_key(BOOT_MID): [SKIN_DARK.r8, SKIN_DARK.g8, SKIN_DARK.b8],
+			_color_key(BOOT_DARK): [SKIN_MID.r8, SKIN_MID.g8, SKIN_MID.b8],
+			_color_key(BELT): [BRIEF.r8, BRIEF.g8, BRIEF.b8],
+		}
+	else:
+		var dark := base.darkened(0.32)
+		var light := base.lightened(0.28)
+		table = {
+			_color_key(SHIRT_DARK): [dark.r8, dark.g8, dark.b8],
+			_color_key(SHIRT_MID): [base.r8, base.g8, base.b8],
+			_color_key(SHIRT_LIGHT): [light.r8, light.g8, light.b8],
+		}
 	for i in range(0, data.size(), 4):
 		if data[i + 3] == 0:
 			continue
@@ -643,8 +670,7 @@ func _recolor_texture(texture: Texture2D, base: Color) -> Texture2D:
 
 func _build_sprite_frames(path: String, tint := Color(0, 0, 0, 0)) -> SpriteFrames:
 	var texture: Texture2D = load(path)
-	if tint.a > 0.0:
-		texture = _recolor_texture(texture, tint)
+	texture = _recolor_texture(texture, tint)
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
 
