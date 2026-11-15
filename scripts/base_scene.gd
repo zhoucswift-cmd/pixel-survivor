@@ -25,6 +25,9 @@ func _ready() -> void:
 	camera.limit_right = 640
 	camera.limit_bottom = 640
 
+	# 基地里不能用武器：不能开枪、朝向跟移动、只播走路动画
+	_player.set_armed(false)
+
 	_player.health_changed.connect(_on_health_changed)
 	_player.ammo_changed.connect(_on_ammo_changed)
 	_on_health_changed(_player.health, _player.max_health)

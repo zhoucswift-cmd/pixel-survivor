@@ -52,6 +52,8 @@ const DEFAULT_WEAPON: WeaponType = preload("res://assets/weapons/shotgun.tres")
 @export var weapons: Array[WeaponType] = []
 ## 角色可活动范围（脚底中心坐标），防止走出房间
 @export var bounds: Rect2 = Rect2(20, 24, 280, 272)
+## 是否装备武器（基地里设成 false：不能开枪、不跟鼠标瞄准，只播走路动画）
+@export var armed := true
 @export var max_health: float = 100.0
 ## 复活后的无敌时间（秒）
 @export var respawn_invulnerable := 1.5
@@ -123,12 +125,13 @@ func _physics_process(delta: float) -> void:
 	_invulnerable = maxf(_invulnerable - delta, 0.0)
 	_tick_reload(delta)
 
-	var want_shoot := (Input.is_action_pressed("shoot") if _data.automatic
-		else Input.is_action_just_pressed("shoot"))
-	if want_shoot:
-		_try_shoot()
-	if Input.is_action_just_pressed("reload"):
-		start_reload()
+	if armed:
+		var want_shoot := (Input.is_action_pressed("shoot") if _data.automatic
+			else Input.is_action_just_pressed("shoot"))
+		if want_shoot:
+			_try_shoot()
+		if Input.is_action_just_pressed("reload"):
+			start_reload()
 
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	velocity = input * speed
@@ -145,10 +148,13 @@ func _update_animation(input: Vector2) -> void:
 	if _shooting:
 		return
 
-	# 朝向永远跟着鼠标（像双摇杆射击），移动只影响播走路还是待机
-	_facing = _dir_to_facing(shot_direction())
-
 	var moving := input.length() > 0.01
+	if armed:
+		# 有武器：朝向永远跟着鼠标（像双摇杆射击）
+		_facing = _dir_to_facing(shot_direction())
+	elif moving:
+		# 基地里没武器：朝向跟着移动方向，就是普通走路
+		_facing = _dir_to_facing(input)
 
 	var anim_name := ("walk_" if moving else "idle_") + _facing
 	if _sprite.animation != anim_name:
@@ -259,6 +265,26 @@ func _apply_held_texture() -> void:
 	_gun.offset = -_data.held_pivot
 
 
+## 切换身体用哪套帧（带枪 / 不带枪）
+func _set_body_baked(baked: bool) -> void:
+	if baked == _using_baked:
+		return
+	_using_baked = baked
+	_sprite.sprite_frames = _frames_baked if baked else _frames_plain
+	if _sprite.animation != "":
+		_sprite.play(_sprite.animation)
+
+
+## 开关武器：基地里关掉（不能开枪、不显示旋转枪、只播走路动画）
+func set_armed(value: bool) -> void:
+	armed = value
+	if _gun != null:
+		_gun.visible = armed and _gun.texture != null
+	if not armed:
+		# 用原画身体帧（枪和手都画在里面），旋转枪就不需要了
+		_set_body_baked(true)
+
+
 ## 持枪那只手固定，枪身绕它转到鼠标方向。
 ## 朝左半边时水平镜像（flip_h）+ 角度减 180°，这样枪不会倒过来、手也还在枪下方。
 func _update_gun() -> void:
@@ -282,11 +308,7 @@ func _update_gun() -> void:
 
 	# 上下瞄时换成“枪已经画在身体上”的那套帧，避免旋转的枪压在背上/肚子上
 	var vertical := absf(aim.y) > absf(aim.x)
-	if vertical != _using_baked:
-		_using_baked = vertical
-		_sprite.sprite_frames = _frames_baked if vertical else _frames_plain
-		if _sprite.animation != "":
-			_sprite.play(_sprite.animation)
+	_set_body_baked(vertical)
 
 	# 竖向时隐藏旋转枪（身体帧里已经有枪和手了），横向才显示
 	_gun.visible = not vertical and _gun.texture != null

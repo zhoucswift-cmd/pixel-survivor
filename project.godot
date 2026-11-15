@@ -69,6 +69,11 @@ interact={
 "events": [Object(InputEventKey,"device":-1,"physical_keycode":69)]
 }
 
+build_mode={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":4194306)]
+}
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

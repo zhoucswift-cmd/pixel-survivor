@@ -37,6 +37,14 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var screen := get_viewport_rect().size
 
+	# 非建造模式：只留一条 Tab 提示
+	if not _builder.build_mode:
+		var hint := "TAB - BUILD"
+		var size := font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 8)
+		draw_string(font, Vector2((screen.x - size.x) * 0.5, screen.y - 6.0), hint,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.9, 0.93, 1.0, 0.75))
+		return
+
 	# 底部底板
 	var bar_h := 34.0
 	var bar_y := screen.y - bar_h

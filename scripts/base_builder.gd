@@ -15,6 +15,8 @@ const BLOCKED_TILES := [Vector2i(7, 1), Vector2i(0, 2), Vector2i(1, 2)]
 @export var types: Array[BaseFurniture] = []
 
 var selected := 0
+## 建造模式（Tab 开关）：关着的时候就是纯走路，不显示预览也不能摆东西
+var build_mode := false
 var _pieces: Dictionary = {}          # Vector2i -> PlacedFurniture
 var _ghost: Sprite2D = null
 var _map: Node2D = null
@@ -126,6 +128,13 @@ func is_buildable(cell: Vector2i) -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("build_mode"):
+		toggle_build_mode()
+		return
+
+	if not build_mode:
+		return
+
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key: int = event.physical_keycode
 		if key >= KEY_1 and key <= KEY_9:
@@ -143,8 +152,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			remove(_mouse_cell())
 
 
+## Tab：进 / 出建造模式
+func toggle_build_mode() -> void:
+	build_mode = not build_mode
+	if not build_mode and _ghost != null:
+		_ghost.visible = false
+	layout_changed.emit()
+
+
 func _process(_delta: float) -> void:
 	if _ghost == null or selected_type() == null:
+		return
+
+	if not build_mode:
+		_ghost.visible = false
 		return
 
 	var cell := _mouse_cell()
