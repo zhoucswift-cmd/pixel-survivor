@@ -9,11 +9,30 @@ const ROW_GAP := 3.0
 const ROW_PAD := 4.0
 const FOOTER_H := 26.0
 
-## 在制造面板里点了某一行
-signal craft_requested(index: int)
+## 三个工作台的配方（out 是产物 id，bed 会进仓库，其它是装备）
+const RECIPES := {
+	"tools": [],
+	"clothing": [
+		{"out": "shirt_blue", "name": "BLUE SHIRT", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(63, 111, 181), "cost": {"cloth": 1}},
+		{"out": "shirt_red", "name": "RED SHIRT", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(181, 63, 63), "cost": {"cloth": 1}},
+		{"out": "shirt_green", "name": "GREEN SHIRT", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(74, 150, 88), "cost": {"cloth": 1}},
+		{"out": "pants_dark", "name": "DARK PANTS", "tex": "res://assets/base/icon_pants.png", "tint": Color8(54, 60, 82), "cost": {"cloth": 2}},
+		{"out": "boots_brown", "name": "BROWN BOOTS", "tex": "res://assets/base/icon_boots.png", "tint": Color8(112, 74, 46), "cost": {"rope": 2}},
+	],
+	"carpentry": [
+		{"out": "bed", "name": "BED", "tex": "res://assets/base/bed.png", "cost": {"cloth": 2, "rope": 1}},
+	],
+}
+
+## 制造面板里点了某个配方
+signal craft_requested(out_id: String)
 
 var _builder: Node2D = null
 var _selected := -1
+## 当前制造面板属于哪个工作台
+var _craft_category := ""
+var _recipe_tex: Array[Texture2D] = []
+var _hover_recipe := -1
 ## 面板模式："build" 建造 / "craft" 工作台制造
 var _mode := "build"
 
@@ -34,6 +53,27 @@ func set_mode(mode: String) -> void:
 
 func is_craft_open() -> bool:
 	return _mode == "craft"
+
+
+## 打开制造面板时告诉它现在是哪个工作台
+func set_craft_category(cat: String) -> void:
+	_craft_category = cat
+	_hover_recipe = -1
+	_recipe_tex.clear()
+	for r: Dictionary in recipes():
+		_recipe_tex.append(load(r["tex"]) if r.has("tex") else null)
+	queue_redraw()
+
+
+func recipes() -> Array:
+	return RECIPES.get(_craft_category, [])
+
+
+## 制造面板里第 i 个配方那一行
+func _recipe_rect(index: int) -> Rect2:
+	var panel := _panel_rect()
+	return Rect2(panel.position.x + ROW_PAD, panel.position.y + HEADER_H + ROW_PAD + float(index) * (ROW_H + ROW_GAP),
+		PANEL_W - ROW_PAD * 2.0, ROW_H)
 
 
 func _process(_delta: float) -> void:
@@ -63,7 +103,12 @@ func _gui_input(event: InputEvent) -> void:
 	if event.button_index != MOUSE_BUTTON_LEFT or _builder == null:
 		return
 	if _mode == "craft":
-		# 制造面板暂时是空的，点哪都不做事
+		var list: Array = recipes()
+		for i in list.size():
+			if _recipe_rect(i).has_point(event.position):
+				craft_requested.emit(list[i]["out"])
+				accept_event()
+				return
 		return
 	for i in _builder.types.size():
 		if _slot_rect(i).has_point(event.position):
@@ -117,12 +162,38 @@ func _draw() -> void:
 
 	# ===== 面板内容 =====
 	if crafting:
-		# 制造面板暂时没有配方：留空，只给一句提示
-		var tip := "NO RECIPES YET"
-		var tip_size := font.get_string_size(tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 6)
-		draw_string(font, Vector2(panel.position.x + (panel.size.x - tip_size.x) * 0.5,
-			panel.position.y + HEADER_H + 30.0), tip,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.62, 0.66, 0.74, 0.9))
+		var list: Array = recipes()
+		if list.is_empty():
+			var tip := "NO RECIPES YET"
+			var tip_size := font.get_string_size(tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 6)
+			draw_string(font, Vector2(panel.position.x + (panel.size.x - tip_size.x) * 0.5,
+				panel.position.y + HEADER_H + 30.0), tip,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.62, 0.66, 0.74, 0.9))
+		else:
+			var gs := get_node_or_null("/root/GameState")
+			for i in list.size():
+				var r := _recipe_rect(i)
+				var recipe: Dictionary = list[i]
+				var afford: bool = gs == null or gs.can_afford(recipe["cost"])
+				var hot := i == _hover_recipe
+				draw_rect(r, Color(0.72, 0.24, 0.20, 0.95) if hot else Color(0.13, 0.14, 0.17, 1.0))
+				draw_rect(r, Color(1, 1, 1, 0.5) if hot else Color(1, 1, 1, 0.10), false, 1.0)
+				if i < _recipe_tex.size() and _recipe_tex[i] != null:
+					var box := Vector2(r.size.y - 8.0, r.size.y - 8.0)
+					draw_texture_rect(_recipe_tex[i], Rect2(r.position + Vector2(6.0, 4.0), box),
+						false, recipe.get("tint", Color(1, 1, 1)))
+				# 名字
+				draw_string(font, Vector2(r.position.x + 26.0, r.position.y + 10.0), recipe["name"],
+					HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
+					Color(0.96, 0.96, 0.92, 0.95) if afford else Color(0.62, 0.64, 0.7, 0.9))
+				# 材料
+				var parts: Array[String] = []
+				for k: String in recipe["cost"]:
+					parts.append("%d %s" % [int(recipe["cost"][k]), k.to_upper()])
+				var cost_text := " ".join(parts)
+				draw_string(font, Vector2(r.position.x + 26.0, r.position.y + 19.0), cost_text,
+					HORIZONTAL_ALIGNMENT_LEFT, -1, 5,
+					Color(0.78, 0.84, 0.95, 0.9) if afford else Color(0.9, 0.5, 0.45, 0.9))
 	else:
 		var types: Array = _builder.types
 		for i in types.size():
@@ -164,7 +235,7 @@ func _draw() -> void:
 		"R ROTATE   U UPGRADE   DEL CLEAR",
 	]
 	if crafting:
-		lines = ["E / TAB CLOSE"]
+		lines = ["LMB CRAFT", "E / TAB CLOSE"]
 	for i in lines.size():
 		draw_string(font, Vector2(6.0, screen.y - 22.0 + float(i) * 8.0), lines[i],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.78, 0.84, 0.95, 0.9))

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BaseFurniture" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/base_furniture.gd" id="1_type"]
+[ext_resource type="Texture2D" path="res://assets/base/carpentrybench.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_type")
+display_name = "木工台"
+short_name = "CARPENTRY"
+texture = ExtResource("2_tex")
+footprint = Vector2i(2, 1)
+max_level = 1
+craft_category = "carpentry"

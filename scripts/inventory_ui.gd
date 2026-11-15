@@ -15,27 +15,27 @@ const ITEMS := [
 	},
 	{
 		"id": "shirt_blue", "name": "BLUE SHIRT", "type": "EQUIP", "slot": "jacket",
-		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(63, 111, 181), "own": true,
+		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(63, 111, 181),
 		"desc": ["A worn blue shirt.", "Click to wear it."],
 	},
 	{
 		"id": "shirt_red", "name": "RED SHIRT", "type": "EQUIP", "slot": "jacket",
-		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(181, 63, 63), "own": true,
+		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(181, 63, 63),
 		"desc": ["A faded red shirt.", "Click to wear it."],
 	},
 	{
 		"id": "shirt_green", "name": "GREEN SHIRT", "type": "EQUIP", "slot": "jacket",
-		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(74, 150, 88), "own": true,
+		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(74, 150, 88),
 		"desc": ["A grass-stained shirt.", "Click to wear it."],
 	},
 	{
 		"id": "pants_dark", "name": "DARK PANTS", "type": "EQUIP", "slot": "pants",
-		"tex": "res://assets/base/icon_pants.png", "tint": Color8(54, 60, 82), "own": true,
+		"tex": "res://assets/base/icon_pants.png", "tint": Color8(54, 60, 82),
 		"desc": ["Rugged work pants.", "Click to wear them."],
 	},
 	{
 		"id": "boots_brown", "name": "BROWN BOOTS", "type": "EQUIP", "slot": "boots",
-		"tex": "res://assets/base/icon_boots.png", "tint": Color8(112, 74, 46), "own": true,
+		"tex": "res://assets/base/icon_boots.png", "tint": Color8(112, 74, 46),
 		"desc": ["Sturdy leather boots.", "Click to wear them."],
 	},
 ]
@@ -83,6 +83,7 @@ func _ready() -> void:
 
 func is_open() -> bool:
 	return _open
+
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -142,6 +143,8 @@ func _visible_indices() -> Array:
 	for i in ITEMS.size():
 		var data: Dictionary = ITEMS[i]
 		if data.has("slot"):
+			if _count_of(i) <= 0:
+				continue
 			var worn: bool = _gs != null and _gs.equipped.get(data["slot"], "") == data["id"]
 			if not worn:
 				out.append(i)
@@ -154,8 +157,8 @@ func _count_of(index: int) -> int:
 	if index < 0 or index >= ITEMS.size():
 		return 0
 	var data: Dictionary = ITEMS[index]
-	if data.has("own"):
-		return 1
+	if data.has("slot"):
+		return 1 if (_gs != null and _gs.owns(data["id"])) else 0
 	if _gs == null:
 		return 0
 	return int(_gs.get(data["id"]))

@@ -78,8 +78,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			_lie_down(bed)
 			return
 		# 站在工作台旁边按 E 打开 / 关闭制造面板
-		if _bench_near_player() != null:
-			_set_craft_open(not _craft_open)
+		var bench := _bench_near_player()
+		if bench != null:
+			if _craft_open:
+				_set_craft_open(false)
+			else:
+				_palette.set_craft_category(bench.data.craft_category)
+				_set_craft_open(true)
 			return
 		# 走进楼梯里按 E 就下楼（去草地那张图）
 		if in_stairs():
@@ -113,9 +118,25 @@ func _set_craft_open(value: bool) -> void:
 	_builder.set_build_locked(value)
 
 
-## 在制造面板里点了某一行：往仓库加一件
-func _on_craft_requested(index: int) -> void:
-	_builder.add_stock(index, 1)
+## 在制造面板里点了某个配方：够材料就做出来
+func _on_craft_requested(out_id: String) -> void:
+	var gs := get_node_or_null("/root/GameState")
+	if gs == null:
+		return
+	var recipe: Dictionary = {}
+	for r: Dictionary in _palette.recipes():
+		if r["out"] == out_id:
+			recipe = r
+			break
+	if recipe.is_empty() or not gs.can_afford(recipe["cost"]):
+		return
+	gs.spend(recipe["cost"])
+
+	if out_id == "bed":
+		var index: int = _builder.types.find(_bed_type())
+		_builder.add_stock(index, 1)
+	else:
+		gs.add_owned(out_id)
 
 
 ## 第一个带“躺人贴图”的家具就是床（工作台造它）
@@ -130,7 +151,7 @@ func _bed_type() -> BaseFurniture:
 func _bench_near_player() -> Node2D:
 	for piece: Node2D in _builder.all_pieces():
 		var data: BaseFurniture = piece.data
-		if data == null or data.short_name != "BENCH":
+		if data == null or data.craft_category == "":
 			continue
 		var fp := Vector2(data.footprint) * 16.0
 		if int(piece.steps) % 2 == 1:

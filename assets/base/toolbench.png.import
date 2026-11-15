@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cf2tlexp4bj4k"
-path="res://.godot/imported/workbench.png-9bc3ab16b1be6c2a88987f3eea1b51a4.ctex"
+uid="uid://6nqswitck4gb"
+path="res://.godot/imported/toolbench.png-1305a5903b451759a3e971f919340f37.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/base/workbench.png"
-dest_files=["res://.godot/imported/workbench.png-9bc3ab16b1be6c2a88987f3eea1b51a4.ctex"]
+source_file="res://assets/base/toolbench.png"
+dest_files=["res://.godot/imported/toolbench.png-1305a5903b451759a3e971f919340f37.ctex"]
 
 [params]
 

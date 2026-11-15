@@ -6,6 +6,8 @@ extends Resource
 ## HUD 上显示的英文短名（默认字体没有中文）
 @export var short_name := "FURNITURE"
 @export var texture: Texture2D
+## 这个工作台能做什么类别的配方（tools / clothing / carpentry）；空 = 不是工作台
+@export var craft_category := ""
 ## 有人的时候换用的贴图（比如床躺了人），横向多帧就是呼吸动画；留空表示不能躺
 @export var occupied_texture: Texture2D = null
 ## 有人贴图有几帧
