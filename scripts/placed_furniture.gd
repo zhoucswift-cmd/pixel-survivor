@@ -8,6 +8,7 @@ var level := 1
 var cell := Vector2i.ZERO
 
 var _sprite: Sprite2D
+var _body: StaticBody2D
 
 
 func setup(furniture: BaseFurniture, at_cell: Vector2i, start_level := 1) -> void:
@@ -17,13 +18,33 @@ func setup(furniture: BaseFurniture, at_cell: Vector2i, start_level := 1) -> voi
 
 	position = Vector2(at_cell) * TILE + Vector2(furniture.footprint) * TILE * 0.5
 
+	# 家具画在人物下面（人物 z_index = 1），走过去不会被挡住
+	z_index = 0
+
 	if _sprite == null:
 		_sprite = Sprite2D.new()
-		_sprite.z_index = 1
+		_sprite.z_index = 0
 		add_child(_sprite)
 	_sprite.texture = furniture.texture
 
+	_add_collision(furniture)
 	queue_redraw()
+
+
+## 占地的碰撞体：人物不能穿过家具
+func _add_collision(furniture: BaseFurniture) -> void:
+	if _body != null:
+		_body.queue_free()
+	_body = StaticBody2D.new()
+	_body.collision_layer = 1     # 和地形同一层，玩家/僵尸的 mask 是 1
+	_body.collision_mask = 0
+
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(furniture.footprint) * TILE
+	shape.shape = rect
+	_body.add_child(shape)
+	add_child(_body)
 
 
 ## 升一级，满级返回 false
