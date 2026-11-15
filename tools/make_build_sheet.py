@@ -53,6 +53,29 @@ def draw_blueprint(px, cx, cy, direction, width=PAPER_W):
     return x0, y0
 
 
+def draw_blueprint_edge(px, cx, cy, direction):
+    """侧面看图纸：只有一条竖着的窄边（蓝白相间）+ 一只扶着的手。"""
+    cx, cy = int(round(cx)), int(round(cy))
+    w, h = 3, PAPER_H
+    x0 = cx - w // 2
+    y0 = cy - h // 2
+
+    for y in range(h):
+        for x in range(w):
+            if x in (0, w - 1) or y in (0, h - 1):
+                put(px, x0 + x, y0 + y, OUTLINE)
+            else:
+                # 一条竖线，蓝白相间
+                put(px, x0 + x, y0 + y, PAPER_D if (y // 2) % 2 == 0 else PAPER)
+
+    # 扶着纸的手
+    hx = cx + (1 if direction == 3 else -2)
+    hy = cy - 1
+    for dx in range(2):
+        for dy in range(3):
+            put(px, hx + dx, hy + dy, SKIN)
+
+
 def draw_hands(px, x0, y0):
     """两只手按在图纸的左右两边。"""
     for side in (0, 1):
@@ -153,8 +176,12 @@ def main() -> None:
                     for xx in range(32):
                         if body_px[xx, yy][3] > 0:
                             px[xx, yy] = body_px[xx, yy]
+            elif direction in (2, 3):
+                # 左右走：看到的是图纸的侧面，就是一条竖着的线
+                offset = -5 if direction == 2 else 5
+                draw_blueprint_edge(px, mid_x + offset, mid_y + 2, direction)
             else:
-                # 其余方向：纸在身前，双手扶在两边
+                # 正面：纸在身前，双手扶在两边
                 x0, y0 = draw_blueprint(px, mid_x, mid_y + 2, direction)
                 draw_hands(px, x0, y0)
 
