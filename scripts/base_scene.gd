@@ -231,7 +231,8 @@ func _process(_delta: float) -> void:
 	var bench_now := _bench_near_player()
 	if bench_now != null:
 		_travel.visible = true
-		_travel.text = "E - " + _craft_label(bench_now.data.craft_category)
+		# 显示 E + 建筑名字
+		_travel.text = "E - " + str(bench_now.data.short_name)
 		return
 
 	# 站进楼梯里才提示按 E 下楼
