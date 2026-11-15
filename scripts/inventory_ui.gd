@@ -14,16 +14,6 @@ const ITEMS := [
 		"desc": ["Coiled hemp rope.", "Used for crafting", "and repairs."],
 	},
 	{
-		"id": "shirt_blue", "name": "BLUE SHIRT", "type": "EQUIP", "slot": "jacket",
-		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(63, 111, 181),
-		"desc": ["A worn blue shirt.", "Click to wear it."],
-	},
-	{
-		"id": "shirt_red", "name": "RED SHIRT", "type": "EQUIP", "slot": "jacket",
-		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(181, 63, 63),
-		"desc": ["A faded red shirt.", "Click to wear it."],
-	},
-	{
 		"id": "shirt_green", "name": "GREEN SHIRT", "type": "EQUIP", "slot": "jacket",
 		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(74, 150, 88),
 		"desc": ["A grass-stained shirt.", "Click to wear it."],

@@ -13,8 +13,6 @@ const FOOTER_H := 26.0
 const RECIPES := {
 	"tools": [],
 	"clothing": [
-		{"out": "shirt_blue", "name": "BLUE SHIRT", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(63, 111, 181), "cost": {"cloth": 1}},
-		{"out": "shirt_red", "name": "RED SHIRT", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(181, 63, 63), "cost": {"cloth": 1}},
 		{"out": "shirt_green", "name": "GREEN SHIRT", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(74, 150, 88), "cost": {"cloth": 1}},
 		{"out": "pants_dark", "name": "DARK PANTS", "tex": "res://assets/base/icon_pants.png", "tint": Color8(54, 60, 82), "cost": {"cloth": 2}},
 		{"out": "boots_brown", "name": "BROWN BOOTS", "tex": "res://assets/base/icon_boots.png", "tint": Color8(112, 74, 46), "cost": {"rope": 2}},
