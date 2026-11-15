@@ -32,10 +32,10 @@ func _initialize() -> void:
 	print("家具种类  -> %s" % str(builder.types.map(func(t): return t.short_name)))
 
 	print("库存          -> %d" % builder.stock_of(0))
-	print("放置(10,10)   -> %s，库存 %d" % [str(builder.place(Vector2i(10, 10))), builder.stock_of(0)])
-	print("重复放置      -> %s（应 false）" % str(builder.place(Vector2i(10, 10))))
-	print("设备瓦片上    -> %s（应 false）" % str(builder.place(Vector2i(6, 25))))
-	print("墙外          -> %s（应 false）" % str(builder.place(Vector2i(0, 5))))
+	print("放置(10,10)   -> %s，库存 %d" % [str(builder.place(Vector2i(10, 10), 0)), builder.stock_of(0)])
+	print("重复放置      -> %s（应 false）" % str(builder.place(Vector2i(10, 10), 0)))
+	print("设备瓦片上    -> %s（应 false）" % str(builder.place(Vector2i(6, 25), 0)))
+	print("墙外          -> %s（应 false）" % str(builder.place(Vector2i(0, 5), 0)))
 	print("升级          -> %s，等级 %d" % [
 		str(builder.upgrade(Vector2i(10, 10))), builder.piece_at(Vector2i(10, 10)).level])
 	print("再次升级      -> %s，等级 %d" % [
