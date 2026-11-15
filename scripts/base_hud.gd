@@ -19,7 +19,7 @@ const RECIPES := {
 		{"out": "casual_shoes", "name": "CASUAL SHOES", "tex": "res://assets/base/icon_boots.png", "tint": Color8(126, 84, 52), "cost": {"cloth": 5, "rope": 3}, "desc": ["Light shoes, good", "for walking around."]},
 	],
 	"carpentry": [
-		{"out": "bed", "name": "BED", "tex": "res://assets/base/bed.png", "cost": {"cloth": 2, "rope": 1}, "desc": ["A place to sleep.", "Restores your", "energy overnight."], "furniture": "BED"},
+		{"out": "bed", "name": "BED", "tex": "res://assets/base/bed.png", "cost": {"wood": 10, "cloth": 6, "rope": 4}, "desc": ["A place to sleep.", "Restores your", "energy overnight."], "furniture": "BED"},
 	],
 }
 
@@ -202,8 +202,9 @@ func _draw() -> void:
 				for k: String in recipe["cost"]:
 					parts.append("%d %s" % [int(recipe["cost"][k]), k.to_upper()])
 				var cost_text := " ".join(parts)
+				var cost_size := 5 if cost_text.length() <= 18 else 4
 				draw_string(font, Vector2(r.position.x + 26.0, r.position.y + 19.0), cost_text,
-					HORIZONTAL_ALIGNMENT_LEFT, -1, 5,
+					HORIZONTAL_ALIGNMENT_LEFT, -1, cost_size,
 					Color(0.78, 0.84, 0.95, 0.9) if afford else Color(0.9, 0.5, 0.45, 0.9))
 
 			# 悬停的那一条，在左边弹出详情栏
