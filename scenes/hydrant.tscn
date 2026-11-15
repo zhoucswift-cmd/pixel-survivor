@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/hydrant.gd" id="1_hyd"]
+[ext_resource type="Texture2D" path="res://assets/base/hydrant.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/base/water_spray.png" id="3_spray"]
+[ext_resource type="Texture2D" path="res://assets/base/water_puddle.png" id="4_puddle"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hyd"]
+size = Vector2(14, 8)
+
+[node name="Hydrant" type="Node2D"]
+script = ExtResource("1_hyd")
+
+[node name="Puddle" type="Sprite2D" parent="."]
+visible = false
+texture = ExtResource("4_puddle")
+hframes = 4
+
+[node name="Sprite" type="Sprite2D" parent="."]
+z_index = 1
+texture = ExtResource("2_tex")
+
+[node name="Spray" type="Sprite2D" parent="."]
+visible = false
+z_index = 2
+position = Vector2(0, -18)
+texture = ExtResource("3_spray")
+hframes = 4
+
+[node name="Body" type="StaticBody2D" parent="."]
+position = Vector2(0, 5)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Body"]
+shape = SubResource("RectangleShape2D_hyd")

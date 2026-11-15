@@ -104,6 +104,8 @@ C:\game\test
 │   ├─ make_grass.lua         生成 16 块草皮瓦片 + 2 块井盖
 │   ├─ make_concrete.lua      生成 16 块水泥瓦片（楼顶基地）
 │   ├─ make_furniture.lua     生成 4 件基地家具贴图
+│   ├─ make_hydrant.lua       生成消防栓（16×16）
+│   ├─ make_water.lua         生成水花 + 水洼动画帧
 │   ├─ make_bed.lua           生成床（32×48）
 │   ├─ make_stairs.lua        生成楼梯（48×80，3×5 格）
 │   ├─ make_base_map.py       生成基地 TileSet + base.tsx/base.tmj
@@ -602,6 +604,9 @@ after 3.5s-> 0 只（确认不再刷）
   **从草地按 E 回基地时，玩家会直接出现在楼梯上**（`scripts/game_state.gd` 这个 autoload 传状态）；
   那 3×5 格不能摆家具
   （`base_builder.gd` 的 `blocked_cells`）。
+- **消防栓（草地）**：`scenes/hydrant.tscn`，摆在草地 `(232, 104)`。被子弹打中（在武器的射程/扇形内）
+  会喷水花 0.55 秒，随后在脚下铺开 **3×3 的水洼**（`water_puddle.png`，4 帧涟漪循环）。
+  子弹判定在 `player.gd::_apply_shot_hits()` 里顺带检查 `hydrants` 组。
 - **躺床**：走到床旁边会提示 `E - SLEEP`，按 E 人消失、床上换成“躺着的自己”（`bed_occupied.png`，
   两帧呼吸动画，0.9s 一换），提示变成 `E - GET UP`；再按 E 起床回到原来的位置。
   躺着的时候**建造模式是锁住的**：按 Tab 没反应，底部也不显示 `TAB - BUILD`，只有 `E - GET UP`；

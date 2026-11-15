@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/meadow.tscn" id="2_meadow"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/hydrant.tscn" id="11_hydrant"]
 [ext_resource type="PackedScene" path="res://scenes/crosshair.tscn" id="4_crosshair"]
 [ext_resource type="Script" path="res://scripts/grid_overlay.gd" id="5_grid"]
 [ext_resource type="Script" path="res://scripts/health_bar.gd" id="6_health"]
@@ -18,6 +19,9 @@ script = ExtResource("1_main")
 [node name="Grid" type="Node2D" parent="."]
 z_index = 5
 script = ExtResource("5_grid")
+
+[node name="Hydrant" parent="." instance=ExtResource("11_hydrant")]
+position = Vector2(232, 104)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
 position = Vector2(160, 160)

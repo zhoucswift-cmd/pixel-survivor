@@ -231,6 +231,12 @@ func _apply_shot_hits(aim_dir: Vector2) -> Vector2:
 	if not _data.multi_hit and best != null:
 		best.take_damage(_data.damage)
 
+	# 打到消防栓：喷水花
+	for hydrant in get_tree().get_nodes_in_group("hydrants"):
+		if hydrant is Node2D and _in_cone((hydrant as Node2D).global_position, aim_dir):
+			if hydrant.has_method("hit"):
+				hydrant.hit()
+
 	if best != null:
 		return best.global_position
 	return global_position + aim_dir * shot_range_px()
