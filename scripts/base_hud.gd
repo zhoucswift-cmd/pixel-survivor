@@ -78,7 +78,8 @@ func _draw() -> void:
 
 	# 当前选中 + 操作提示
 	var data_sel: BaseFurniture = _builder.selected_type()
-	var name_text: String = "-" if data_sel == null else "%s  x%d" % [data_sel.short_name, _builder.stock_of(_selected)]
+	var name_text: String = "PRESS 1 TO BUILD" if data_sel == null \
+		else "%s  x%d" % [data_sel.short_name, _builder.stock_of(_selected)]
 	var level_text := ""
 	var hovered: Node2D = _builder.piece_at(_builder.mouse_cell())
 	if hovered != null:

@@ -19,7 +19,8 @@ const BLOCKED_TILES := [Vector2i(7, 1), Vector2i(0, 2), Vector2i(1, 2)]
 ## 每种家具的初始库存
 @export var initial_stock := 8
 
-var selected := 0
+## 当前选中的家具；-1 = 还没选（进建造模式时不预选）
+var selected := -1
 ## 建造模式（Tab 开关）：关着的时候就是纯走路，不显示预览也不能摆东西
 var build_mode := false
 
@@ -66,7 +67,7 @@ func select(index: int) -> void:
 
 
 func selected_type() -> BaseFurniture:
-	if types.is_empty():
+	if types.is_empty() or selected < 0 or selected >= types.size():
 		return null
 	return types[selected]
 
@@ -119,6 +120,8 @@ func can_place(cell: Vector2i, type_index := -1, steps := -1) -> bool:
 		return false
 	if type_index < 0:
 		type_index = selected
+	if type_index < 0:
+		return false
 	if steps < 0:
 		steps = _placing_steps
 	var data: BaseFurniture = types[clampi(type_index, 0, types.size() - 1)]
@@ -134,6 +137,8 @@ func place(cell: Vector2i, type_index := -1, start_level := 1, steps := -1) -> b
 		return false
 	if type_index < 0:
 		type_index = selected
+	if type_index < 0:
+		return false
 	type_index = clampi(type_index, 0, types.size() - 1)
 	if steps < 0:
 		steps = _placing_steps
@@ -185,8 +190,9 @@ func upgrade(cell: Vector2i) -> bool:
 func rotate_at(cell: Vector2i, direction: int) -> void:
 	var piece: Node2D = _pieces.get(cell, null)
 	if piece == null:
+		if selected_type() == null:
+			return
 		_placing_steps = posmod(_placing_steps + direction, 4)
-		_update_ghost()
 		return
 
 	var origin: Vector2i = piece.cell
@@ -307,21 +313,26 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Tab：进 / 出建造模式
 func toggle_build_mode() -> void:
 	build_mode = not build_mode
-	if not build_mode:
-		if _ghost != null:
-			_ghost.visible = false
-		if _dragging != null:
-			_finish_drag()
+	# 刚进建造模式时不预选，按了数字键才出现要放的家具
+	selected = -1
+	if _ghost != null:
+		_ghost.visible = false
+	if not build_mode and _dragging != null:
+		_finish_drag()
+	_update_ghost()
+	selection_changed.emit(selected)
 	layout_changed.emit()
 	build_mode_changed.emit(build_mode)
 
 
 func _process(_delta: float) -> void:
-	if _ghost == null or selected_type() == null:
+	if _ghost == null:
 		return
 
-	if not build_mode:
+	if not build_mode or selected_type() == null:
 		_ghost.visible = false
+		if _dragging != null:
+			return
 		return
 
 	var cell := _mouse_cell()
