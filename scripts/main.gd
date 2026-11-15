@@ -13,6 +13,7 @@ extends Node2D
 @onready var _health_bar: Control = $HUD/Health
 @onready var _health_text: Label = $HUD/HealthText
 @onready var _ammo_label: Label = $HUD/Ammo
+@onready var _items_label: Label = $HUD/Items
 
 ## 截图时用固定瞄准方向（名字后缀 -> 向量）
 const AIM_BY_NAME := {
@@ -70,6 +71,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## 弹量/换弹状态每帧刷新（换弹时显示倒计时）
 func _process(_delta: float) -> void:
 	_ammo_label.text = _player.ammo_display()
+	_items_label.text = "CLOTH %d   ROPE %d" % [GameState.cloth, GameState.rope]
 	var edge := at_edge()
 	_travel_label.visible = edge
 	_travel_label.text = "E - BACK TO BASE" if edge else ""

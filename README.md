@@ -105,6 +105,7 @@ C:\game\test
 │   ├─ make_concrete.lua      生成 16 块水泥瓦片（楼顶基地）
 │   ├─ make_furniture.lua     生成 4 件基地家具贴图
 │   ├─ make_workbench.lua     生成工作台（32×16）
+│   ├─ make_resources.lua     生成布料 / 绳子掉落物
 │   ├─ make_hydrant.lua       生成消防栓（16×16）
 │   ├─ make_water.lua         生成水花 + 水洼动画帧
 │   ├─ make_bed.lua           生成床（16×32）
@@ -610,6 +611,10 @@ after 3.5s-> 0 只（确认不再刷）
 - **工作台（造东西）**：站到工作台旁边会提示 `E - CRAFT`，按 **E** 弹出和建造一样的**黑色面板**
   （标题 `CRAFT`）；再按 **E** 或 **Tab** 关闭（面板开着时建造模式锁住，走远了也会自动关）。
   **面板里暂时不列建筑和配方**，只显示 `NO RECIPES YET`，等做了配方表再往里填。
+- **击杀掉落**：普通僵尸死亡时独立判定 —— **25% 掉 1 个布料**、**10% 掉 1 个绳子**
+  （`zombie.gd::_die()`，400 只实测 24.5% / 10.8%）。掉落物是 `scenes/pickup.tscn`（Area2D，
+  上下轻浮），玩家走过去自动捡起，数量存在 `GameState.cloth / rope`，草地右上角 HUD 显示
+  `CLOTH n  ROPE n`。
 - **消防栓（草地）**：`scenes/hydrant.tscn`，摆在草地 `(232, 104)`。被子弹打中（在武器的射程/扇形内）
   会喷水花 0.55 秒，随后在脚下铺开 **3×3 的水洼**（`water_puddle.png`，4 帧涟漪循环）。
   子弹判定在 `player.gd::_apply_shot_hits()` 里顺带检查 `hydrants` 组。

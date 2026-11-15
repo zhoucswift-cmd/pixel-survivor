@@ -173,7 +173,21 @@ func _die() -> void:
 	gore.position = position
 	get_parent().add_child(gore)
 
+	# 掉落：普通僵尸 25% 布料、10% 绳子（各自独立判定）
+	if randf() < 0.25:
+		_spawn_drop("cloth")
+	if randf() < 0.10:
+		_spawn_drop("rope")
+
 	queue_free()
+
+
+## 在地上扔一个掉落物
+func _spawn_drop(item: String) -> void:
+	var pickup: Node2D = load("res://scenes/pickup.tscn").instantiate()
+	pickup.item = item
+	pickup.position = position + Vector2(randf_range(-8.0, 8.0), randf_range(-4.0, 8.0))
+	get_parent().add_child(pickup)
 
 
 func _build_sprite_frames() -> SpriteFrames:
