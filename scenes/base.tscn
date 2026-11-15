@@ -24,11 +24,12 @@ color = Color(0.84, 0.88, 1, 1)
 
 [node name="City" type="Sprite2D" parent="."]
 z_index = -20
-position = Vector2(-160, -160)
+position = Vector2(-278, -51)
 centered = false
 texture = ExtResource("8_city")
 
 [node name="Map" type="Node2D" parent="."]
+modulate = Color(0.7, 0.72, 0.86, 1)
 z_index = -1
 script = ExtResource("2_map")
 map_path = "res://tiled/base.tmj"

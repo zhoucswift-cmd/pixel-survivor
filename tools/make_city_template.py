@@ -1,4 +1,8 @@
-"""生成基地背景图的制作模板：800x800，标出「平台遮住的部分」和「会被看到的部分」。
+"""生成基地背景图的制作模板：1036x582，标出「平台遮住的部分」和「会被看到的部分」。
+
+背景图在场景里放在世界 (-278, -51)，所以：
+  图片像素 (278, 51) = 世界 (0, 0) = 平台左上角
+  平台 480x480 → 图片 (278,51) ~ (758,531)
 
 运行: python tools/make_city_template.py
 """
@@ -7,16 +11,16 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(r"C:\game\test")
-W = H = 800
-PLATFORM = (160, 160, 640, 640)   # 平台在图片里的位置（世界坐标 0,0 ~ 480,480）
+W, H = 1036, 582
+PLATFORM = (278, 51, 278 + 480, 51 + 480)
 
 img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 d = ImageDraw.Draw(img, "RGBA")
 
-# 会被看到的一圈：深蓝色半透明
+# 会被看到的部分：深蓝半透明
 d.rectangle((0, 0, W - 1, H - 1), fill=(30, 40, 60, 120))
 
-# 平台区域：洋红半透明（这块会被屋顶挡住，随便画）
+# 平台区域（会被屋顶挡住，可以随便画）
 d.rectangle(PLATFORM, fill=(200, 30, 120, 110))
 
 # 16px 网格（对齐瓦片用）
@@ -27,14 +31,8 @@ for y in range(0, H, 16):
     c = (255, 255, 255, 26) if y % 80 else (255, 255, 255, 64)
     d.line((0, y, W - 1, y), fill=c)
 
-# 平台边界（粗描边）
-for w, col in ((3, (255, 80, 160, 255)),):
-    d.rectangle(PLATFORM, outline=col, width=w)
-
-# 四边中间的标记线（平台中心十字）
-cx, cy = PLATFORM[0] + (PLATFORM[2] - PLATFORM[0]) // 2, PLATFORM[1] + (PLATFORM[3] - PLATFORM[1]) // 2
-d.line((cx, 0, cx, H - 1), fill=(255, 255, 255, 40))
-d.line((0, cy, W - 1, cy), fill=(255, 255, 255, 40))
+# 平台边界
+d.rectangle(PLATFORM, outline=(255, 80, 160, 255), width=3)
 
 img.save(ROOT / "docs" / "city_background_template.png")
-print("saved docs/city_background_template.png")
+print(f"saved docs/city_background_template.png {W}x{H}")

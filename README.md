@@ -625,10 +625,12 @@ after 3.5s-> 0 只（确认不再刷）
   - **中间**：5×4 物品格子（图标 + 数量，选中黄框），左下角 `已用 / 总格数`
   - **右侧**：物品详情（大图标 + 名字 + 类型 + 描述 + `QTY n`）
   物品表在 `inventory_ui.gd` 的 `ITEMS` 里，数量读 `GameState`。
-- **自己画城市背景**：PNG 800×800 覆盖 ssets/base/city_background.png 即可（平台 480×480 居中，
-  只外圈 160px 会被看到）；docs/city_background_template.png 是带 16px 网格和平台范围标记的模板，
-  由 	ools/make_city_template.py 生成。
-- **夜色城市背景**：	ools/make_city.lua 生成 800×800 的城市（平台 480×480 居中，四周外扩 160），
+- **自己画城市背景**：PNG **1036×582** 覆盖 ssets/base/city_background.png，
+  Sprite 放在世界 (-278,-51)，图片像素 (278,51) 正好是世界原点（平台左上角），
+  平台 480×480 会把图片 (278,51)~(758,531) 盖住，其余部分才会被看到。
+  docs/city_background_template.png 是带 16px 网格和平台范围标记的模板（	ools/make_city_template.py 生成）。
+- **夜色城市背景**：现在用的是手绘夜景图（ssets/base/city_background.png，1036×582）。
+  旧的程序生成版还在 	ools/make_city.lua（800×800，平台居中、四周外扩 160），
   夜景配色：深蓝沥青街道 + 湿反光、暗色楼顶（只有受光边亮一点）、随机亮/坏路灯与暖色光池、
   屋顶霓虹招牌、天线红色航灯、街上零星车灯与僵尸群、起火楼的火光与烟柱、几层雾带，
   平台四周再压一圈阴影表示屋顶高于街道。基地里还有 NightTint（CanvasModulate 0.84/0.88/1.0）

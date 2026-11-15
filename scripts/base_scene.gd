@@ -40,10 +40,11 @@ func _ready() -> void:
 	_player.bounds = Rect2(24, 24, 432, 432)
 	# 相机可以多看平台外 160px，走到边上就能看到楼下的城市
 	var camera: Camera2D = _player.get_node("Camera2D")
-	camera.limit_left = -160
-	camera.limit_top = -160
-	camera.limit_right = 640
-	camera.limit_bottom = 640
+	# 背景图是 1036x582，放在 (-278,-51)，镜头别跑出图外
+	camera.limit_left = -118
+	camera.limit_top = 39
+	camera.limit_right = 598
+	camera.limit_bottom = 441
 
 	# 基地里不能使用武器：不能开枪、朝向跟移动、手里也没有枪
 	_player.set_armed(false)
