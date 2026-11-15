@@ -9,8 +9,13 @@ const ROW_GAP := 3.0
 const ROW_PAD := 4.0
 const FOOTER_H := 26.0
 
+## 在制造面板里点了某一行
+signal craft_requested(index: int)
+
 var _builder: Node2D = null
 var _selected := -1
+## 面板模式："build" 建造 / "craft" 工作台制造
+var _mode := "build"
 
 
 func setup(builder: Node2D) -> void:
@@ -19,6 +24,16 @@ func setup(builder: Node2D) -> void:
 	builder.layout_changed.connect(_on_layout_changed)
 	_selected = builder.selected
 	queue_redraw()
+
+
+## 切换面板模式（建造 / 制造）
+func set_mode(mode: String) -> void:
+	_mode = mode
+	queue_redraw()
+
+
+func is_craft_open() -> bool:
+	return _mode == "craft"
 
 
 func _process(_delta: float) -> void:
@@ -49,7 +64,10 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	for i in _builder.types.size():
 		if _slot_rect(i).has_point(event.position):
-			_builder.select(i)
+			if _mode == "craft":
+				craft_requested.emit(i)
+			else:
+				_builder.select(i)
 			accept_event()
 			return
 
@@ -69,8 +87,11 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var screen := get_viewport_rect().size
 
-	# 非建造模式：只留一条 Tab 提示（睡着等锁住的情况下不显示）
-	if not _builder.build_mode:
+	# 制造面板和建造面板共用一个面板，只是标题和底部提示不一样
+	var crafting := _mode == "craft"
+
+	# 既不在建造、也不在制造：只留一条 Tab 提示（睡着等锁住的情况下不显示）
+	if not crafting and not _builder.build_mode:
 		if _builder.build_locked:
 			return
 		var hint := "TAB - BUILD"
@@ -90,14 +111,15 @@ func _draw() -> void:
 	draw_line(Vector2(header.position.x, header.position.y + HEADER_H - 1),
 		Vector2(header.position.x + header.size.x, header.position.y + HEADER_H - 1),
 		Color(1, 1, 1, 0.12), 1.0)
-	draw_string(font, Vector2(panel.position.x + 5.0, panel.position.y + 10.0), "BUILD",
+	draw_string(font, Vector2(panel.position.x + 5.0, panel.position.y + 10.0),
+		"CRAFT" if crafting else "BUILD",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.95, 0.93, 0.85, 0.95))
 
 	# ===== 物品列表 =====
 	var types: Array = _builder.types
 	for i in types.size():
 		var row := _slot_rect(i)
-		var is_selected: bool = i == _selected
+		var is_selected: bool = (i == _selected) and not crafting
 		var data: BaseFurniture = types[i]
 
 		# 行底色
@@ -133,6 +155,8 @@ func _draw() -> void:
 		"RMB CANCEL / RECYCLE",
 		"R ROTATE   U UPGRADE   DEL CLEAR",
 	]
+	if crafting:
+		lines = ["LMB CRAFT", "E CLOSE"]
 	for i in lines.size():
 		draw_string(font, Vector2(6.0, screen.y - 22.0 + float(i) * 8.0), lines[i],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.78, 0.84, 0.95, 0.9))

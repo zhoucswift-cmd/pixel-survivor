@@ -20,6 +20,8 @@ const BENCH_REACH := 26.0
 
 var _sleeping_piece: Node2D = null
 var _wake_position := Vector2.ZERO
+## 工作台制造面板是否打开
+var _craft_open := false
 
 
 func _ready() -> void:
@@ -47,9 +49,12 @@ func _ready() -> void:
 	_builder.setup(_map, _player)
 	_builder.build_mode_changed.connect(_on_build_mode_changed)
 	_palette.setup(_builder)
+	_palette.craft_requested.connect(_on_craft_requested)
 
 
 func _on_build_mode_changed(active: bool) -> void:
+	if active and _craft_open:
+		_set_craft_open(false)
 	# 躺着的时候按 Tab：先起床再进建造模式
 	if active and _sleeping_piece != null:
 		_wake_up()
@@ -57,6 +62,11 @@ func _on_build_mode_changed(active: bool) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 制造面板开着的时候，Tab 先关面板（不再钻去建造模式）
+	if _craft_open and event.is_action_pressed("build_mode"):
+		_set_craft_open(false)
+		return
+
 	if event.is_action_pressed("interact"):
 		# 躺着的时候按 E 起来
 		if _sleeping_piece != null:
@@ -67,10 +77,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if bed != null:
 			_lie_down(bed)
 			return
-		# 站在工作台旁边按 E 造一张床
+		# 站在工作台旁边按 E 打开 / 关闭制造面板
 		if _bench_near_player() != null:
-			var bed_index: int = _builder.types.find(_bed_type())
-			_builder.add_stock(bed_index, 1)
+			_set_craft_open(not _craft_open)
 			return
 		# 走进楼梯里按 E 就下楼（去草地那张图）
 		if in_stairs():
@@ -95,6 +104,18 @@ func _bed_near_player() -> Node2D:
 		if rect.has_point(_player.position):
 			return piece
 	return null
+
+
+## 打开 / 关闭工作台制造面板（打开时锁住建造模式）
+func _set_craft_open(value: bool) -> void:
+	_craft_open = value
+	_palette.set_mode("craft" if value else "build")
+	_builder.set_build_locked(value)
+
+
+## 在制造面板里点了某一行：往仓库加一件
+func _on_craft_requested(index: int) -> void:
+	_builder.add_stock(index, 1)
 
 
 ## 第一个带“躺人贴图”的家具就是床（工作台造它）
@@ -152,6 +173,15 @@ func in_stairs() -> bool:
 
 
 func _process(_delta: float) -> void:
+	# 制造面板：走远了自动关掉
+	if _craft_open and _bench_near_player() == null:
+		_set_craft_open(false)
+
+	if _craft_open:
+		_travel.visible = true
+		_travel.text = "E - CLOSE"
+		return
+
 	# 躺着：只提示起来
 	if _sleeping_piece != null:
 		_travel.visible = true
