@@ -93,6 +93,17 @@ func remove(cell: Vector2i) -> bool:
 	return true
 
 
+## 清空整个基地的家具（DELETE 键）
+func clear_all() -> void:
+	for cell: Vector2i in _pieces.keys():
+		var piece: Node2D = _pieces[cell]
+		if is_instance_valid(piece):
+			piece.queue_free()
+	_pieces.clear()
+	layout_changed.emit()
+	_save_layout()
+
+
 ## 升级某格，满级返回 false
 func upgrade(cell: Vector2i) -> bool:
 	var piece: Node2D = _pieces.get(cell, null)
@@ -120,6 +131,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			select(key - KEY_1)
 		elif key == KEY_U:
 			upgrade(_mouse_cell())
+		elif key == KEY_DELETE:
+			clear_all()
 		return
 
 	if event is InputEventMouseButton and event.pressed:
