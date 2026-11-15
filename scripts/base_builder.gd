@@ -157,6 +157,11 @@ func place(cell: Vector2i, type_index := -1, start_level := 1, steps := -1) -> b
 
 	layout_changed.emit()
 	_save_layout()
+
+	# 放完就取消选中：要再按数字键才会继续拿一件出来
+	selected = -1
+	_update_ghost()
+	selection_changed.emit(selected)
 	return true
 
 
