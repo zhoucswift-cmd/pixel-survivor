@@ -1,12 +1,11 @@
 extends Node2D
 ## 基地场景：30x30 的楼顶水泥平台 + 建造系统。
-## 基地没有战斗，所以 HUD 不显示血条和弹药，只保留建造栏和边缘提示。
+## 基地没有战斗，所以 HUD 不显示血条和弹药，只保留建造栏。
 
 @onready var _map: Node2D = $Map
 @onready var _player: CharacterBody2D = $Player
 @onready var _builder: Node2D = $Builder
 @onready var _palette: Control = $HUD/Palette
-@onready var _travel_label: Label = $HUD/Travel
 
 ## 离女儿墙多少格之内算“到边上了”
 const EDGE_MARGIN := 2
@@ -53,9 +52,4 @@ func at_edge() -> bool:
 	var cell := Vector2i(floori(_player.position.x / 16.0), floori(_player.position.y / 16.0))
 	return cell.x <= EDGE_MARGIN or cell.y <= EDGE_MARGIN \
 		or cell.x >= BOARD - 1 - EDGE_MARGIN or cell.y >= BOARD - 1 - EDGE_MARGIN
-
-
-func _process(_delta: float) -> void:
-	var edge := at_edge()
-	_travel_label.visible = edge
-	_travel_label.text = "E - GO DOWNTOWN" if edge else ""
+""
