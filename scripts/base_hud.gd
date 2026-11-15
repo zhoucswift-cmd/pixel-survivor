@@ -299,9 +299,3 @@ func _draw_recipe_detail(recipe: Dictionary, panel: Rect2, font: Font) -> void:
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.78, 0.82, 0.9, 0.9))
 		y += 8.0
 
-	# 底部：材料
-	var parts: Array[String] = []
-	for k: String in recipe["cost"]:
-		parts.append("%d %s" % [int(recipe["cost"][k]), k.to_upper()])
-	draw_string(font, Vector2(rect.position.x + 5.0, rect.position.y + rect.size.y - 7.0),
-		" ".join(parts), HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.95, 0.9, 0.7, 0.95))
