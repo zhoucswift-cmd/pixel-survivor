@@ -4,6 +4,9 @@ extends Control
 const SLOT := 24.0
 const SLOT_GAP := 3.0
 const ICON := 16.0
+const BAR_H := 40.0
+const SLOT_LEFT := 8.0
+const SLOT_TOP := 4.0
 
 var _builder: Node2D = null
 var _selected := 0
@@ -20,6 +23,25 @@ func setup(builder: Node2D) -> void:
 func _process(_delta: float) -> void:
 	# 鼠标移动到别的家具上时刷新一下悬停信息
 	queue_redraw()
+
+
+## 某个家具槽位的矩形（画和点都用它）
+func _slot_rect(index: int) -> Rect2:
+	var screen := get_viewport_rect().size
+	return Rect2(SLOT_LEFT + float(index) * (SLOT + SLOT_GAP), screen.y - BAR_H + SLOT_TOP, SLOT, SLOT)
+
+
+## 鼠标左键点槽位选家具（点到槽位外就不吃事件，交给世界里的放置/拖动）
+func _gui_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton and event.pressed):
+		return
+	if event.button_index != MOUSE_BUTTON_LEFT or _builder == null:
+		return
+	for i in _builder.types.size():
+		if _slot_rect(i).has_point(event.position):
+			_builder.select(i)
+			accept_event()
+			return
 
 
 func _on_selection_changed(index: int) -> void:
@@ -46,17 +68,17 @@ func _draw() -> void:
 		return
 
 	# 底部底板
-	var bar_h := 40.0
+	var bar_h := BAR_H
 	var bar_y := screen.y - bar_h
 	draw_rect(Rect2(0, bar_y, screen.x, bar_h), Color(0.06, 0.07, 0.09, 0.82))
 	draw_line(Vector2(0, bar_y), Vector2(screen.x, bar_y), Color(1, 1, 1, 0.12), 1.0)
 
 	# 槽位
 	var types: Array = _builder.types
-	var x := 8.0
-	var y := bar_y + 4.0
+	var x := SLOT_LEFT + float(types.size()) * (SLOT + SLOT_GAP)
+	var y := bar_y + SLOT_TOP
 	for i in types.size():
-		var rect := Rect2(x, y, SLOT, SLOT)
+		var rect := _slot_rect(i)
 		var is_selected: bool = i == _selected
 		draw_rect(rect, Color(0.86, 0.33, 0.26, 0.9) if is_selected else Color(0.16, 0.18, 0.22, 0.95))
 		draw_rect(rect, Color(1, 1, 1, 0.75) if is_selected else Color(1, 1, 1, 0.25), false, 1.0)
@@ -71,14 +93,10 @@ func _draw() -> void:
 			var pos := rect.position + (Vector2(SLOT, SLOT) - draw_size) * 0.5
 			draw_texture_rect(tex, Rect2(pos, draw_size), false)
 
-		var num := str(i + 1)
-		draw_string(font, rect.position + Vector2(1, 7), num,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(1, 1, 1, 0.85))
-		x += SLOT + SLOT_GAP
 
 	# 当前选中 + 操作提示
 	var data_sel: BaseFurniture = _builder.selected_type()
-	var name_text: String = "PRESS 1 TO BUILD" if data_sel == null \
+	var name_text: String = "CLICK AN ITEM" if data_sel == null \
 		else "%s  x%d" % [data_sel.short_name, _builder.stock_of(_selected)]
 	var level_text := ""
 	var hovered: Node2D = _builder.piece_at(_builder.mouse_cell())
@@ -86,9 +104,7 @@ func _draw() -> void:
 		level_text = "  LV%d/%d" % [hovered.level, hovered.data.max_level]
 	draw_string(font, Vector2(x + 6.0, y + 9.0), name_text + level_text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.95, 0.95, 0.9, 0.95))
-	var hint := "LMB BUILD/DRAG   RMB RECYCLE   WHEEL ROTATE   U UPGRADE   DEL CLEAR"
-	if types.size() > 1:
-		hint = "1-%d SELECT   " % types.size() + hint
+	var hint := "LMB SELECT / BUILD / DRAG    RMB RECYCLE    WHEEL ROTATE    U UPGRADE    DEL CLEAR"
 	draw_string(font, Vector2(8.0, y + 33.0), hint,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.8, 0.85, 0.95, 0.8))
 
