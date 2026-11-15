@@ -5,10 +5,14 @@ extends Area2D
 const TEXTURES := {
 	"cloth": "res://assets/base/cloth.png",
 	"rope": "res://assets/base/rope.png",
+	"stone": "res://assets/base/stone.png",
+	"wood": "res://assets/base/wood.png",
 }
 const COLORS := {
 	"cloth": Color(0.96, 0.94, 0.84, 0.95),
 	"rope": Color(1.0, 0.86, 0.6, 0.95),
+	"stone": Color(0.86, 0.88, 0.92, 0.95),
+	"wood": Color(0.94, 0.78, 0.56, 0.95),
 }
 
 @export var item := "cloth"

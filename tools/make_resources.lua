@@ -177,3 +177,100 @@ put(rope, 13, 13, ROPE_D)
 
 outline(rope)
 save(rope, "C:/game/test/assets/base/rope.aseprite")
+
+
+-- ================= 石头 =================
+local ROCK_L = rgb(186, 188, 194)
+local ROCK   = rgb(146, 148, 156)
+local ROCK_D = rgb(108, 110, 118)
+local ROCK_DD= rgb(80, 82, 90)
+
+local function ellipse(img, cx, cy, rx, ry, color, shade)
+	for y = 0, H - 1 do
+		for x = 0, W - 1 do
+			local nx = (x - cx) / rx
+			local ny = (y - cy) / ry
+			if nx * nx + ny * ny <= 1.0 then
+				local c = color
+				if shade then c = shade(x, y, nx, ny) or color end
+				if get(img, x, y) == 0 then put(img, x, y, c) end
+			end
+		end
+	end
+end
+
+local stone = new_image()
+-- 大石头
+ellipse(stone, 7.0, 9.5, 5.2, 4.2, ROCK, function(x, y, nx, ny)
+	if nx + ny < -0.5 then return ROCK_L end
+	if nx + ny > 0.55 then return ROCK_D end
+	return ROCK
+end)
+-- 小石头
+ellipse(stone, 12.0, 10.5, 3.0, 2.4, ROCK, function(x, y, nx, ny)
+	if nx + ny < -0.3 then return ROCK_L end
+	if nx + ny > 0.5 then return ROCK_D end
+	return ROCK
+end)
+-- 石头上的一点裂纹/高光
+put(stone, 5, 7, ROCK_L)
+put(stone, 6, 6, ROCK_L)
+put(stone, 9, 11, ROCK_DD)
+put(stone, 11, 10, ROCK_DD)
+put(stone, 12, 9, ROCK_L)
+-- 地上的碎渣
+put(stone, 2, 13, ROCK_D)
+put(stone, 14, 13, ROCK_D)
+outline(stone)
+save(stone, "C:/game/test/assets/base/stone.aseprite")
+
+-- ================= 木头 =================
+local WOOD_L  = rgb(198, 146, 92)
+local WOOD    = rgb(160, 112, 64)
+local WOOD_D  = rgb(122, 82, 44)
+local BARK    = rgb(96, 62, 34)
+local RING    = rgb(206, 168, 118)
+
+local wood = new_image()
+-- 下面那根（横躺）
+for y = 8, 12 do
+	for x = 1, 12 do
+		local c = WOOD
+		if y == 8 then c = WOOD_L elseif y == 12 then c = WOOD_D end
+		put(wood, x, y, c)
+	end
+end
+-- 左端断面
+for y = 8, 12 do
+	for x = 1, 3 do
+		put(wood, x, y, BARK)
+	end
+end
+put(wood, 2, 10, RING)
+put(wood, 3, 9, RING)
+put(wood, 3, 11, RING)
+-- 树皮纹理
+for x = 4, 12 do
+	put(wood, x, 10, WOOD_D)
+end
+-- 上面那根（斜着叠）
+for y = 3, 7 do
+	for x = 4, 14 do
+		local c = WOOD
+		if y == 3 then c = WOOD_L elseif y == 7 then c = WOOD_D end
+		put(wood, x, y, c)
+	end
+end
+for y = 3, 7 do
+	for x = 12, 14 do
+		put(wood, x, y, BARK)
+	end
+end
+put(wood, 13, 5, RING)
+put(wood, 12, 4, RING)
+put(wood, 12, 6, RING)
+for x = 5, 11 do
+	put(wood, x, 5, WOOD_D)
+end
+outline(wood)
+save(wood, "C:/game/test/assets/base/wood.aseprite")

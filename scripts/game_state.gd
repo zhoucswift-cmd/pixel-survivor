@@ -6,6 +6,8 @@ var base_spawn_at_stairs := false
 ## 资源（击杀僵尸掉落）
 var cloth := 0
 var rope := 0
+var stone := 0
+var wood := 0
 
 ## 装备栏：每个槽位放的是哪件物品 id（空字符串 = 没穿）
 ## 开局就穿着布帽 / T恤 / 长裤 / 布鞋
@@ -57,11 +59,17 @@ func add_item(item: String, amount := 1) -> void:
 			cloth += amount
 		"rope":
 			rope += amount
+		"stone":
+			stone += amount
+		"wood":
+			wood += amount
 
 
 func reset_items() -> void:
 	cloth = 0
 	rope = 0
+	stone = 0
+	wood = 0
 
 
 ## 够不够付这份材料

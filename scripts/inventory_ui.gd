@@ -14,6 +14,16 @@ const ITEMS := [
 		"desc": ["Coiled hemp rope.", "Used for crafting", "and repairs."],
 	},
 	{
+		"id": "stone", "name": "STONE", "type": "MATERIAL",
+		"tex": "res://assets/base/stone.png",
+		"desc": ["A chunk of rock.", "Used for building."],
+	},
+	{
+		"id": "wood", "name": "WOOD", "type": "MATERIAL",
+		"tex": "res://assets/base/wood.png",
+		"desc": ["Cut logs.", "Used for building."],
+	},
+	{
 		"id": "casual_hat", "name": "CASUAL HAT", "type": "EQUIP", "slot": "hat",
 		"tex": "res://assets/base/icon_hat.png", "tint": Color8(198, 176, 128),
 		"desc": ["A casual cloth cap.", "Click to wear it."],
