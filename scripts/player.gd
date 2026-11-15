@@ -21,6 +21,8 @@ const SHEET_PATH := "res://assets/character_sheet.png"
 const SHEET_BAKED_PATH := "res://assets/character_sheet_gun.png"
 ## 空手（基地里用：身体 + 手，没有枪）
 const SHEET_UNARMED_PATH := "res://assets/character_sheet_unarmed.png"
+## 建造模式（手里拿蓝图 + 扳手）
+const SHEET_BUILD_PATH := "res://assets/character_sheet_build.png"
 const FRAME_SIZE := Vector2i(32, 32)
 const WALK_FPS := 10.0
 const SHOOT_FPS := 12.0
@@ -76,6 +78,9 @@ var _invulnerable := 0.0
 var _frames_plain: SpriteFrames
 var _frames_baked: SpriteFrames
 var _frames_unarmed: SpriteFrames
+var _frames_build: SpriteFrames
+## 基地建造模式：手里拿蓝图和扳手
+var build_mode := false
 var _reloading := false
 var _reload_left := 0.0
 var _muzzle_scene: PackedScene = preload("res://scenes/muzzle_flash.tscn")
@@ -102,6 +107,7 @@ func _ready() -> void:
 	_frames_plain = _build_sprite_frames(SHEET_PATH)
 	_frames_baked = _build_sprite_frames(SHEET_BAKED_PATH)
 	_frames_unarmed = _build_sprite_frames(SHEET_UNARMED_PATH)
+	_frames_build = _build_sprite_frames(SHEET_BUILD_PATH)
 	_sprite.sprite_frames = _frames_plain
 	_sprite.play("idle_down")
 	_sprite.animation_finished.connect(_on_animation_finished)
@@ -288,8 +294,14 @@ func set_armed(value: bool) -> void:
 	if _gun != null:
 		_gun.visible = armed and _gun.texture != null
 	if not armed:
-		# 基地里空手：身体 + 手，没有枪
-		_set_body_sheet(_frames_unarmed)
+		_set_body_sheet(_frames_build if build_mode else _frames_unarmed)
+
+
+## 建造模式开关：换“拿蓝图 + 扳手”的那套帧
+func set_build_mode(value: bool) -> void:
+	build_mode = value
+	if not armed and _frames_build != null and _frames_unarmed != null:
+		_set_body_sheet(_frames_build if value else _frames_unarmed)
 
 
 ## 持枪那只手固定，枪身绕它转到鼠标方向。
@@ -299,8 +311,8 @@ func _update_gun() -> void:
 		return
 
 	if not armed:
-		# 基地里空手：用无枪的身体帧，隐藏旋转枪
-		_set_body_sheet(_frames_unarmed)
+		# 基地里空手 / 建造模式：用对应的身体帧，隐藏旋转枪
+		_set_body_sheet(_frames_build if build_mode else _frames_unarmed)
 		_gun.visible = false
 		return
 

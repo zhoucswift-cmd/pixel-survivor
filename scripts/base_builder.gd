@@ -4,6 +4,7 @@ extends Node2D
 
 signal selection_changed(index: int)
 signal layout_changed()
+signal build_mode_changed(active: bool)
 
 const TILE := 16.0
 const SAVE_PATH := "user://base_layout.json"
@@ -158,6 +159,7 @@ func toggle_build_mode() -> void:
 	if not build_mode and _ghost != null:
 		_ghost.visible = false
 	layout_changed.emit()
+	build_mode_changed.emit(build_mode)
 
 
 func _process(_delta: float) -> void:

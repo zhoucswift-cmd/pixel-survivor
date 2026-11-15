@@ -31,7 +31,12 @@ func _ready() -> void:
 	_player.set_armed(false)
 
 	_builder.setup(_map, _player)
+	_builder.build_mode_changed.connect(_on_build_mode_changed)
 	_palette.setup(_builder)
+
+
+func _on_build_mode_changed(active: bool) -> void:
+	_player.set_build_mode(active)
 
 
 func _unhandled_input(event: InputEvent) -> void:
