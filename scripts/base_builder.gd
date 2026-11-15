@@ -17,7 +17,7 @@ const BLOCKED_TILES := [Vector2i(7, 1), Vector2i(0, 2), Vector2i(1, 2)]
 ## 可建造的家具（留空就自动加载）
 @export var types: Array[BaseFurniture] = []
 ## 楼梯占掉的格子（右下角 3x5），不能在上面摆家具
-@export var blocked_cells := Rect2i(26, 24, 3, 5)
+@export var blocked_cells := Rect2i(26, 21, 3, 5)
 ## 每种家具的初始库存（测试用先给 1）
 @export var initial_stock := 1
 
