@@ -14,6 +14,9 @@ const BOARD := 30
 ## 楼梯那 3x5 格的区域（世界坐标），站在里面按 E 就下楼
 const STAIRS_RECT := Rect2(416, 336, 48, 80)
 ## 离床多远之内能按 E 躺上去
+## 背景图尺寸和摆放位置（scenes/base.tscn 里 City 节点也是这个）
+const BG_SIZE := Vector2(1036, 582)
+const BG_ORIGIN := Vector2(-278, -51)
 const BED_REACH := 26.0
 ## 离工作台多远之内能按 E 做东西
 const BENCH_REACH := 26.0
@@ -24,6 +27,8 @@ var _wake_position := Vector2.ZERO
 var _craft_open := false
 ## 打开制造面板前的鼠标模式（关面板时还原）
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
+## 是否是全景视角（F4 切换）
+var _overview := true
 
 
 func _ready() -> void:
@@ -38,13 +43,8 @@ func _ready() -> void:
 
 	# 基地是 30x30 格 = 480x480：放宽玩家活动范围和相机限制
 	_player.bounds = Rect2(24, 24, 432, 432)
-	# 相机可以多看平台外 160px，走到边上就能看到楼下的城市
-	var camera: Camera2D = _player.get_node("Camera2D")
-	# 背景图是 1036x582，放在 (-278,-51)，镜头别跑出图外
-	camera.limit_left = -118
-	camera.limit_top = 39
-	camera.limit_right = 598
-	camera.limit_bottom = 441
+	# 默认把整张背景图装进屏幕（F4 可以切回普通视角）
+	_set_overview(true)
 
 	# 基地里不能使用武器：不能开枪、朝向跟移动、手里也没有枪
 	_player.set_armed(false)
@@ -99,6 +99,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_F2:
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
+			return
+		if event.physical_keycode == KEY_F4:
+			_set_overview(not _overview)
 
 
 ## 找离玩家最近、且在 reach 范围内的建筑；filter 决定哪些算候选
@@ -172,6 +175,28 @@ func _bed_type() -> BaseFurniture:
 		if data != null and data.occupied_texture != null:
 			return data
 	return _builder.types[0]
+
+
+## 全景视角：整张背景图刚好铺满屏幕；关掉就恢复正常跟随镜头
+func _set_overview(on: bool) -> void:
+	_overview = on
+	var camera: Camera2D = _player.get_node("Camera2D")
+	if camera == null:
+		return
+	if on:
+		var view := get_viewport_rect().size
+		var fit := minf(view.x / BG_SIZE.x, view.y / BG_SIZE.y)
+		camera.zoom = Vector2(fit, fit)
+		camera.limit_left = BG_ORIGIN.x
+		camera.limit_top = BG_ORIGIN.y
+		camera.limit_right = BG_ORIGIN.x + BG_SIZE.x
+		camera.limit_bottom = BG_ORIGIN.y + BG_SIZE.y
+	else:
+		camera.zoom = Vector2.ONE
+		camera.limit_left = -118
+		camera.limit_top = 39
+		camera.limit_right = 598
+		camera.limit_bottom = 441
 
 
 ## 每种台子的提示文案
