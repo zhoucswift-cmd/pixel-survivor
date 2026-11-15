@@ -613,9 +613,14 @@ after 3.5s-> 0 只（确认不再刷）
   （标题 `CRAFT`）；再按 **E** 或 **Tab** 关闭（面板开着时建造模式锁住，走远了也会自动关）。
   **面板里暂时不列建筑和配方**，只显示 `NO RECIPES YET`，等做了配方表再往里填。
 - **背包界面（B）**：`scenes/inventory.tscn` 是 autoload（`CanvasLayer` + `Control`），按 **B** 打开，
-  打开时暂停游戏、再按 B 或点右上角提示关闭。里面是「BACKPACK / CHARACTER / CRAFT」三个页签
-  （目前只有 BACKPACK 可用）、6×4 的物品格子（图标 + 数量）、右侧详情（名字 / 类型 / 描述 / 数量），
-  左下角显示 `已用格数 / 总格数`。物品表在 `inventory_ui.gd` 的 `ITEMS` 里，数量读 `GameState`。
+  打开时暂停游戏、再按 B 关闭。布局模仿生存游戏：
+  - 顶部页签 `BACKPACK / CHARACTER / CRAFT`（只有 BACKPACK 可用）
+  - **左侧**：装备格 4+3 个（帽子/外套/裤子/鞋 · 武器/背包/饰品，目前都是空格）+ 中间**人物预览**
+    （取 `character_sheet.png` 的站立帧）+ 下方**属性框** `ATTACK / DEFENSE / SPEED`
+    （攻击取当前武器伤害，防御 0，速度 100%）
+  - **中间**：5×4 物品格子（图标 + 数量，选中黄框），左下角 `已用 / 总格数`
+  - **右侧**：物品详情（大图标 + 名字 + 类型 + 描述 + `QTY n`）
+  物品表在 `inventory_ui.gd` 的 `ITEMS` 里，数量读 `GameState`。
 - **击杀掉落**：普通僵尸死亡时独立判定 —— **25% 掉 1 个布料**、**10% 掉 1 个绳子**
   （`zombie.gd::_die()`，400 只实测 24.5% / 10.8%）。掉落物是 `scenes/pickup.tscn`（Area2D，
   上下轻浮、**画在血迹上面**（掉落物 `z_index = 3`，血迹是 2），头顶暂时显示物品名字 `CLOTH` / `ROPE`
