@@ -10,8 +10,11 @@ var steps := 0
 var cell := Vector2i.ZERO
 
 var _sprite: Sprite2D
+var _sleep_sprite: Sprite2D
 var _body: StaticBody2D
 var _dragging := false
+var _occupied := false
+var _occ_time := 0.0
 
 
 func setup(furniture: BaseFurniture, at_cell: Vector2i, start_level := 1, start_steps := 0) -> void:
@@ -33,6 +36,22 @@ func setup(furniture: BaseFurniture, at_cell: Vector2i, start_level := 1, start_
 	_sprite.texture = furniture.texture
 	_sprite.rotation = float(steps) * PI * 0.5
 
+	# 有人时用的贴图（床就是躺上去的样子）
+	if data.occupied_texture != null:
+		if _sleep_sprite == null:
+			_sleep_sprite = Sprite2D.new()
+			_sleep_sprite.z_index = 0
+			_sleep_sprite.hframes = maxi(1, data.occupied_frames)
+			add_child(_sleep_sprite)
+		_sleep_sprite.texture = data.occupied_texture
+		_sleep_sprite.hframes = maxi(1, data.occupied_frames)
+		_sleep_sprite.rotation = float(steps) * PI * 0.5
+		_sleep_sprite.visible = _occupied
+		_sleep_sprite.frame = 0
+
+	if _sprite != null:
+		_sprite.visible = not _occupied
+
 	_add_collision(fp)
 	_apply_tint()
 	queue_redraw()
@@ -44,6 +63,29 @@ func _footprint() -> Vector2i:
 		return Vector2i.ONE
 	var fp := data.footprint
 	return Vector2i(fp.y, fp.x) if steps % 2 == 1 else fp
+
+
+## 躺人 / 起来
+func set_occupied(value: bool) -> void:
+	_occupied = value
+	_occ_time = 0.0
+	if _sprite != null:
+		_sprite.visible = not value
+	if _sleep_sprite != null:
+		_sleep_sprite.visible = value
+		_sleep_sprite.frame = 0
+
+
+func is_occupied() -> bool:
+	return _occupied
+
+
+## 呼吸：两帧来回
+func _process(delta: float) -> void:
+	if not _occupied or _sleep_sprite == null or _sleep_sprite.hframes < 2:
+		return
+	_occ_time += delta
+	_sleep_sprite.frame = int(_occ_time / 0.9) % _sleep_sprite.hframes
 
 
 ## 拖动中：半透明、亮一点，方便看落点

@@ -93,6 +93,18 @@ func piece_count() -> int:
 	return seen.size()
 
 
+## 场上所有家具（去重）
+func all_pieces() -> Array[Node2D]:
+	var seen := {}
+	var out: Array[Node2D] = []
+	for cell: Vector2i in _pieces:
+		var piece: Node2D = _pieces[cell]
+		if not seen.has(piece.get_instance_id()):
+			seen[piece.get_instance_id()] = true
+			out.append(piece)
+	return out
+
+
 ## 仓库里某种家具还剩几个
 func stock_of(index: int) -> int:
 	return int(_stock.get(index, 0))

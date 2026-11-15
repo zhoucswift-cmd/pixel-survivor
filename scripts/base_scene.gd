@@ -13,6 +13,11 @@ const EDGE_MARGIN := 2
 const BOARD := 30
 ## 楼梯那 3x5 格的区域（世界坐标），站在里面按 E 就下楼
 const STAIRS_RECT := Rect2(416, 336, 48, 80)
+## 离床多远之内能按 E 躺上去
+const BED_REACH := 26.0
+
+var _sleeping_piece: Node2D = null
+var _wake_position := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -47,14 +52,62 @@ func _on_build_mode_changed(active: bool) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# 走进楼梯里按 E 就下楼（去草地那张图）
-	if event.is_action_pressed("interact") and in_stairs():
-		get_tree().change_scene_to_file("res://scenes/main.tscn")
-		return
+	if event.is_action_pressed("interact"):
+		# 躺着的时候按 E 起来
+		if _sleeping_piece != null:
+			_wake_up()
+			return
+		# 站在床旁边按 E 躺上去
+		var bed := _bed_near_player()
+		if bed != null:
+			_lie_down(bed)
+			return
+		# 走进楼梯里按 E 就下楼（去草地那张图）
+		if in_stairs():
+			get_tree().change_scene_to_file("res://scenes/main.tscn")
+			return
 	# 基地边缘不再用 E 出地图（连提示都没有），只有 B 这个调试快捷键还能切场景
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_B:
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
+
+
+## 玩家旁边的床（没有就返回 null）
+func _bed_near_player() -> Node2D:
+	for piece: Node2D in _builder.all_pieces():
+		var data: BaseFurniture = piece.data
+		if data == null or data.occupied_texture == null:
+			continue
+		var fp := Vector2(data.footprint) * 16.0
+		if int(piece.steps) % 2 == 1:
+			fp = Vector2(fp.y, fp.x)
+		var rect := Rect2(piece.position - fp * 0.5, fp).grow(BED_REACH)
+		if rect.has_point(_player.position):
+			return piece
+	return null
+
+
+## 躺到床上
+func _lie_down(bed: Node2D) -> void:
+	_sleeping_piece = bed
+	_wake_position = _player.position
+	_player.velocity = Vector2.ZERO
+	_player.visible = false
+	_player.set_physics_process(false)
+	# 相机跟着挪到床上，画面里能看到整个人躺着
+	_player.position = bed.position + Vector2(0, -6)
+	bed.set_occupied(true)
+
+
+## 起床
+func _wake_up() -> void:
+	if _sleeping_piece == null:
+		return
+	_sleeping_piece.set_occupied(false)
+	_sleeping_piece = null
+	_player.position = _wake_position
+	_player.visible = true
+	_player.set_physics_process(true)
 
 
 ## 玩家是不是站在楼梯里
@@ -63,6 +116,18 @@ func in_stairs() -> bool:
 
 
 func _process(_delta: float) -> void:
+	# 躺着：只提示起来
+	if _sleeping_piece != null:
+		_travel.visible = true
+		_travel.text = "E - GET UP"
+		return
+
+	# 站在床旁边：提示躺下
+	if _bed_near_player() != null:
+		_travel.visible = true
+		_travel.text = "E - SLEEP"
+		return
+
 	# 站进楼梯里才提示按 E 下楼
 	var inside := in_stairs()
 	_travel.visible = inside
