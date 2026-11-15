@@ -18,7 +18,7 @@ const BLOCKED_TILES := [Vector2i(7, 1), Vector2i(0, 2), Vector2i(1, 2)]
 @export var types: Array[BaseFurniture] = []
 ## 楼梯占掉的格子（右下角 3x5），不能在上面摆家具
 @export var blocked_cells := Rect2i(26, 21, 3, 5)
-## 每种家具的初始库存（测试用先给 1）
+## 每种家具的初始库存（每次进游戏都从这里开始，床就 1 个）
 @export var initial_stock := 1
 
 ## 当前选中的家具；-1 = 还没选（进建造模式时不预选）
@@ -491,14 +491,10 @@ func _save_layout() -> void:
 			"level": piece.level,
 			"steps": int(piece.steps),
 		})
-	var stock: Array = []
-	for i in types.size():
-		stock.append(stock_of(i))
-
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		return
-	file.store_string(JSON.stringify({"pieces": arr, "stock": stock}))
+	file.store_string(JSON.stringify({"pieces": arr}))
 
 
 func _load_layout() -> void:
@@ -508,10 +504,6 @@ func _load_layout() -> void:
 	var parsed: Variant = JSON.parse_string(text)
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return
-
-	var stock: Array = parsed.get("stock", [])
-	for i in mini(stock.size(), types.size()):
-		_stock[i] = int(stock[i])
 
 	for item: Dictionary in parsed.get("pieces", []):
 		var cell := Vector2i(int(item.get("x", 0)), int(item.get("y", 0)))
