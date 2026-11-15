@@ -16,6 +16,8 @@ const BLOCKED_TILES := [Vector2i(7, 1), Vector2i(0, 2), Vector2i(1, 2)]
 
 ## 可建造的家具（留空就自动加载）
 @export var types: Array[BaseFurniture] = []
+## 楼梯占掉的格子（右下角 3x5），不能在上面摆家具
+@export var blocked_cells := Rect2i(26, 24, 3, 5)
 ## 每种家具的初始库存（测试用先给 1）
 @export var initial_stock := 1
 
@@ -261,6 +263,8 @@ func _spawn(data: BaseFurniture, cell: Vector2i, level: int, steps: int, index: 
 ## 这格能不能建：在地图内、不在设备瓦片上
 func is_buildable(cell: Vector2i) -> bool:
 	if cell.x < 1 or cell.y < 1 or cell.x > _board.x - 2 or cell.y > _board.y - 2:
+		return false
+	if blocked_cells.has_point(cell):
 		return false
 	var ground := _map.get_node_or_null("Ground") as TileMapLayer
 	if ground != null and BLOCKED_TILES.has(ground.get_cell_atlas_coords(cell)):
