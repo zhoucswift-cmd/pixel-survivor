@@ -1,11 +1,13 @@
 extends Control
-## 基地建造 HUD：按 Tab 后左侧弹出竖着的家具面板（图标竖排），底部只有一条操作提示。
+## 基地建造 HUD：按 Tab 在右侧弹出黑色建造面板（标题 + 物品列表 + 底部操作提示）。
 
-const PANEL_W := 40.0
-const PANEL_X := 4.0
-const SLOT := 28.0
-const SLOT_GAP := 4.0
-const PANEL_PAD := 6.0
+const PANEL_W := 100.0
+const PANEL_MARGIN := 3.0
+const HEADER_H := 15.0
+const ROW_H := 26.0
+const ROW_GAP := 3.0
+const ROW_PAD := 4.0
+const FOOTER_H := 26.0
 
 var _builder: Node2D = null
 var _selected := -1
@@ -20,26 +22,26 @@ func setup(builder: Node2D) -> void:
 
 
 func _process(_delta: float) -> void:
-	# 鼠标移动到别的家具上时刷新一下悬停信息
+	# 鼠标移到别的家具上时刷新悬停信息
 	queue_redraw()
 
 
 ## 面板外框
 func _panel_rect() -> Rect2:
 	var screen := get_viewport_rect().size
-	var n: int = 0 if _builder == null else _builder.types.size()
-	var h := PANEL_PAD * 2.0 + float(n) * (SLOT + SLOT_GAP) - SLOT_GAP
-	return Rect2(PANEL_X, (screen.y - h) * 0.5, PANEL_W, h)
+	return Rect2(screen.x - PANEL_W - PANEL_MARGIN, PANEL_MARGIN,
+		PANEL_W, screen.y - PANEL_MARGIN * 2.0)
 
 
-## 某个家具槽位的矩形（画和点都用它）
+## 列表里第 index 行的矩形（画和点都用它）
 func _slot_rect(index: int) -> Rect2:
 	var panel := _panel_rect()
-	return Rect2(panel.position.x + (PANEL_W - SLOT) * 0.5,
-		panel.position.y + PANEL_PAD + float(index) * (SLOT + SLOT_GAP), SLOT, SLOT)
+	return Rect2(panel.position.x + ROW_PAD,
+		panel.position.y + HEADER_H + ROW_PAD + float(index) * (ROW_H + ROW_GAP),
+		PANEL_W - ROW_PAD * 2.0, ROW_H)
 
 
-## 鼠标左键点槽位选家具（点到槽位外就不吃事件，交给世界里的放置/拖动）
+## 鼠标左键点某一行选家具（点到面板外就不吃事件，交给世界里的放置/拖动）
 func _gui_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton and event.pressed):
 		return
@@ -77,46 +79,83 @@ func _draw() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.9, 0.93, 1.0, 0.75))
 		return
 
-	# ===== 左侧竖面板 =====
+	# ===== 面板底板（黑色）=====
 	var panel := _panel_rect()
-	draw_rect(panel, Color(0.06, 0.07, 0.09, 0.86))
-	draw_rect(panel, Color(1, 1, 1, 0.16), false, 1.0)
-	# 面板左上角一点高光，做出“浮起来”的感觉
-	draw_line(panel.position + Vector2(1, 1), panel.position + Vector2(panel.size.x - 1, 1),
-		Color(1, 1, 1, 0.22), 1.0)
+	draw_rect(panel, Color(0.02, 0.02, 0.03, 0.94))
+	draw_rect(panel, Color(1, 1, 1, 0.14), false, 1.0)
 
-	var types: Array = _builder.types
-	for i in types.size():
-		var rect := _slot_rect(i)
-		var is_selected: bool = i == _selected
-		draw_rect(rect, Color(0.86, 0.33, 0.26, 0.95) if is_selected else Color(0.16, 0.18, 0.22, 0.96))
-		draw_rect(rect, Color(1, 1, 1, 0.8) if is_selected else Color(1, 1, 1, 0.22), false, 1.0)
-
-		var data: BaseFurniture = types[i]
-		if data != null and data.texture != null:
-			var tex: Texture2D = data.texture
-			var tex_size := tex.get_size()
-			var fit := minf((SLOT - 6.0) / tex_size.x, (SLOT - 6.0) / tex_size.y)
-			var draw_size := tex_size * fit
-			var pos := rect.position + (Vector2(SLOT, SLOT) - draw_size) * 0.5
-			draw_texture_rect(tex, Rect2(pos, draw_size), false)
-
-	# 选中信息（面板正下方）
-	var data_sel: BaseFurniture = _builder.selected_type()
-	var info := "CLICK AN ITEM" if data_sel == null \
-		else "%s x%d" % [data_sel.short_name, _builder.stock_of(_selected)]
-	var hovered: Node2D = _builder.piece_at(_builder.mouse_cell())
-	if hovered != null:
-		info += "  LV%d/%d" % [hovered.level, hovered.data.max_level]
-	draw_string(font, Vector2(panel.position.x + 2.0, panel.position.y + panel.size.y + 10.0),
-		info, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.95, 0.95, 0.9, 0.95))
-
-	# ===== 底部：操作提示 + 已放置数量 =====
-	var hint := "LMB SELECT / BUILD / DRAG    RMB CANCEL / RECYCLE    R ROTATE    U UPGRADE    DEL CLEAR"
-	draw_string(font, Vector2(8.0, screen.y - 5.0), hint,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.8, 0.85, 0.95, 0.8))
-
+	# 标题栏
+	var header := Rect2(panel.position, Vector2(panel.size.x, HEADER_H))
+	draw_rect(header, Color(0.11, 0.12, 0.15, 1.0))
+	draw_line(Vector2(header.position.x, header.position.y + HEADER_H - 1),
+		Vector2(header.position.x + header.size.x, header.position.y + HEADER_H - 1),
+		Color(1, 1, 1, 0.12), 1.0)
+	draw_string(font, Vector2(panel.position.x + 5.0, panel.position.y + 10.0), "BUILD",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.95, 0.93, 0.85, 0.95))
 	var count_text := "%d PLACED" % _builder.piece_count()
 	var count_size := font.get_string_size(count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 6)
-	draw_string(font, Vector2(screen.x - count_size.x - 6.0, screen.y - 5.0), count_text,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.85, 0.9, 1, 0.8))
+	draw_string(font, Vector2(panel.position.x + panel.size.x - count_size.x - 5.0,
+		panel.position.y + 10.0), count_text,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.75, 0.8, 0.9, 0.7))
+
+	# ===== 物品列表 =====
+	var types: Array = _builder.types
+	for i in types.size():
+		var row := _slot_rect(i)
+		var is_selected: bool = i == _selected
+		var data: BaseFurniture = types[i]
+
+		# 行底色
+		draw_rect(row, Color(0.72, 0.24, 0.20, 0.95) if is_selected else Color(0.13, 0.14, 0.17, 1.0))
+		draw_rect(row, Color(1, 1, 1, 0.55) if is_selected else Color(1, 1, 1, 0.10), false, 1.0)
+		# 左边一条色带，像商店条目的图标底
+		draw_rect(Rect2(row.position, Vector2(3.0, row.size.y)),
+			Color(0.95, 0.78, 0.35, 1.0) if is_selected else Color(0.35, 0.38, 0.45, 1.0))
+
+		# 图标
+		if data != null and data.texture != null:
+			var tex: Texture2D = data.texture
+			var box := Vector2(row.size.y - 8.0, row.size.y - 8.0)
+			var tex_size := tex.get_size()
+			var fit := minf(box.x / tex_size.x, box.y / tex_size.y)
+			var draw_size := tex_size * fit
+			var pos := row.position + Vector2(6.0, 4.0) + (box - draw_size) * 0.5
+			draw_texture_rect(tex, Rect2(pos, draw_size), false)
+
+		# 名字 + 数量
+		var name_text: String = "-" if data == null else data.short_name
+		draw_string(font, Vector2(row.position.x + 26.0, row.position.y + 11.0), name_text,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.96, 0.96, 0.92, 0.95))
+		var stock_text := "x%d" % _builder.stock_of(i)
+		var stock_size := font.get_string_size(stock_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 7)
+		draw_string(font, Vector2(row.position.x + row.size.x - stock_size.x - 4.0,
+			row.position.y + 11.0), stock_text,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.86, 0.9, 1.0, 0.95))
+
+		# 第二行：占地尺寸
+		if data != null:
+			var fp := data.footprint
+			var size_text := "%dx%d" % [fp.x, fp.y]
+			draw_string(font, Vector2(row.position.x + 26.0, row.position.y + 21.0), size_text,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.7, 0.74, 0.82, 0.85))
+
+	# 悬停到已放置家具时，在行下面标等级
+	var hovered: Node2D = _builder.piece_at(_builder.mouse_cell())
+	if hovered != null and _selected >= 0:
+		var row := _slot_rect(_selected)
+		var lv := "LV%d/%d" % [hovered.level, hovered.data.max_level]
+		draw_string(font, Vector2(row.position.x + row.size.x - 30.0, row.position.y + 21.0), lv,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(1.0, 0.9, 0.55, 0.95))
+
+	# ===== 面板底部：操作提示 =====
+	var footer_y := panel.position.y + panel.size.y - FOOTER_H
+	draw_line(Vector2(panel.position.x, footer_y), Vector2(panel.position.x + panel.size.x, footer_y),
+		Color(1, 1, 1, 0.10), 1.0)
+	var lines := [
+		"LMB BUILD / DRAG",
+		"RMB CANCEL / RECYCLE",
+		"R ROTATE   U UPGRADE   DEL CLEAR",
+	]
+	for i in lines.size():
+		draw_string(font, Vector2(panel.position.x + 5.0, footer_y + 8.0 + float(i) * 8.0), lines[i],
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.72, 0.78, 0.9, 0.85))
