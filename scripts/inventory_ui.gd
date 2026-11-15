@@ -14,14 +14,14 @@ const ITEMS := [
 		"desc": ["Coiled hemp rope.", "Used for crafting", "and repairs."],
 	},
 	{
-		"id": "cloth_hat", "name": "CLOTH HAT", "type": "EQUIP", "slot": "hat",
+		"id": "casual_hat", "name": "CASUAL HAT", "type": "EQUIP", "slot": "hat",
 		"tex": "res://assets/base/icon_hat.png", "tint": Color8(198, 176, 128),
-		"desc": ["A simple cloth cap.", "Click to wear it."],
+		"desc": ["A casual cloth cap.", "Click to wear it."],
 	},
 	{
-		"id": "tshirt", "name": "T-SHIRT", "type": "EQUIP", "slot": "jacket",
+		"id": "casual_top", "name": "CASUAL TOP", "type": "EQUIP", "slot": "jacket",
 		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(110, 160, 210),
-		"desc": ["A plain t-shirt.", "Click to wear it."],
+		"desc": ["A casual top.", "Click to wear it."],
 	},
 	{
 		"id": "casual_pants", "name": "CASUAL PANTS", "type": "EQUIP", "slot": "pants",
