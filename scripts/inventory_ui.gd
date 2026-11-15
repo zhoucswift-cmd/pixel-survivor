@@ -89,6 +89,7 @@ func toggle() -> void:
 	_open = not _open
 	visible = _open
 	if _open:
+		_selected = -1
 		# 背包要用鼠标点格子：先把系统光标放出来
 		_prev_mouse_mode = Input.mouse_mode
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -176,14 +177,7 @@ func _input(event: InputEvent) -> void:
 	if not _open:
 		return
 	var vis := _visible_indices()
-	if event is InputEventMouseMotion:
-		for slot in vis.size():
-			if _slot_rect(slot).has_point(event.position):
-				if _selected != vis[slot]:
-					_selected = vis[slot]
-					queue_redraw()
-				break
-	elif event is InputEventMouseButton and event.pressed \
+	if event is InputEventMouseButton and event.pressed \
 		and event.button_index == MOUSE_BUTTON_LEFT:
 		for slot in vis.size():
 			if _slot_rect(slot).has_point(event.position):
@@ -192,6 +186,22 @@ func _input(event: InputEvent) -> void:
 				queue_redraw()
 				get_viewport().set_input_as_handled()
 				return
+
+
+## 每帧看鼠标压在哪个格子上：移开就没有黄圈
+func _process(_delta: float) -> void:
+	if not _open:
+		return
+	var vis := _visible_indices()
+	var hovered := -1
+	var mouse := get_local_mouse_position()
+	for slot in vis.size():
+		if _slot_rect(slot).has_point(mouse):
+			hovered = vis[slot]
+			break
+	if hovered != _selected:
+		_selected = hovered
+		queue_redraw()
 
 
 func _draw() -> void:
