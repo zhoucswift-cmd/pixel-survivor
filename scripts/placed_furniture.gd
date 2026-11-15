@@ -119,7 +119,8 @@ func _add_collision(fp: Vector2i) -> void:
 
 	var shape := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
-	rect.size = Vector2(fp) * TILE
+	# 往里收 1px：一格宽的缝隙会更好走，不会贴着边缘卡住
+	rect.size = Vector2(fp) * TILE - Vector2(2.0, 2.0)
 	shape.shape = rect
 	_body.add_child(shape)
 	add_child(_body)

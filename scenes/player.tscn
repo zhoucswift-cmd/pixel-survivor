@@ -4,8 +4,8 @@
 [ext_resource type="Resource" path="res://assets/weapons/shotgun.tres" id="2_weapon"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
-radius = 5.0
-height = 16.0
+radius = 4.5
+height = 15.0
 
 [node name="Player" type="CharacterBody2D"]
 collision_layer = 2
