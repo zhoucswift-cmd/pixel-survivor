@@ -10,6 +10,8 @@ extends Node2D
 ## 离女儿墙多少格之内算“到边上了”
 const EDGE_MARGIN := 2
 const BOARD := 30
+## 楼梯那 3x5 格的区域（世界坐标），站在里面按 E 就下楼
+const STAIRS_RECT := Rect2(416, 336, 48, 80)
 
 
 func _ready() -> void:
@@ -39,10 +41,19 @@ func _on_build_mode_changed(active: bool) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 走进楼梯里按 E 就下楼（去草地那张图）
+	if event.is_action_pressed("interact") and in_stairs():
+		get_tree().change_scene_to_file("res://scenes/main.tscn")
+		return
 	# 基地边缘不再用 E 出地图（连提示都没有），只有 B 这个调试快捷键还能切场景
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_B:
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
+
+
+## 玩家是不是站在楼梯里
+func in_stairs() -> bool:
+	return STAIRS_RECT.has_point(_player.position)
 
 
 ## 玩家是不是走到了平台边缘
