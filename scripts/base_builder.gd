@@ -111,6 +111,21 @@ func rotated_footprint(data: BaseFurniture, steps: int) -> Vector2i:
 	return Vector2i(fp.y, fp.x) if steps % 2 == 1 else fp
 
 
+## 让光标落在（大致）家具中心时，左上角锚点应该在的格子
+func anchor_for(cell: Vector2i, data: BaseFurniture, steps := 0) -> Vector2i:
+	var fp := rotated_footprint(data, steps)
+	return cell - Vector2i(roundi(float(fp.x - 1) * 0.5), roundi(float(fp.y - 1) * 0.5))
+
+
+## 旋转后哪个锚点最接近原来的中心（绕中心转，而不是绕左上角甩）
+func rotated_cell(cell: Vector2i, data: BaseFurniture, old_steps: int, new_steps: int) -> Vector2i:
+	var old_fp := rotated_footprint(data, old_steps)
+	var new_fp := rotated_footprint(data, new_steps)
+	var center := Vector2(cell) + Vector2(old_fp) * 0.5
+	var ideal := center - Vector2(new_fp) * 0.5
+	return Vector2i(roundi(ideal.x), roundi(ideal.y))
+
+
 ## 一个家具从 cell 开始覆盖的所有格子
 func cells_for(cell: Vector2i, data: BaseFurniture, steps := 0) -> Array[Vector2i]:
 	var fp := rotated_footprint(data, steps)
@@ -207,11 +222,17 @@ func rotate_at(cell: Vector2i, direction: int) -> void:
 
 	var origin: Vector2i = piece.cell
 	var data: BaseFurniture = piece.data
-	var steps := posmod(int(piece.steps) + direction, 4)
+	var old_steps: int = int(piece.steps)
+	var steps := posmod(old_steps + direction, 4)
 	var level: int = piece.level
 
 	_unregister(piece)
 	piece.queue_free()
+
+	# 先按“绕中心转”算新锚点，转不开再退回原来的格子
+	var turned := rotated_cell(origin, data, old_steps, steps)
+	if can_place(turned, types.find(data), steps):
+		origin = turned
 
 	if can_place(origin, types.find(data), steps):
 		var fresh: Node2D = PLACED_SCENE.instantiate()
@@ -255,7 +276,7 @@ func _finish_drag() -> void:
 	_dragging = null
 	piece.set_dragging(false)
 
-	var cell := _mouse_cell()
+	var cell := anchor_for(_mouse_cell(), piece.data, int(piece.steps))
 	if can_place(cell, types.find(piece.data), int(piece.steps)):
 		piece.setup(piece.data, cell, piece.level, int(piece.steps))
 		_register(piece, cell, int(piece.steps), piece.data)
@@ -310,8 +331,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					var piece: Node2D = _pieces.get(cell, null)
 					if piece != null:
 						_start_drag(piece, cell)
-					else:
-						place(cell)
+					elif selected_type() != null:
+						place(anchor_for(cell, selected_type(), _placing_steps))
 				else:
 					_finish_drag()
 			MOUSE_BUTTON_RIGHT:
@@ -359,8 +380,8 @@ func _process(_delta: float) -> void:
 		_ghost.visible = false
 		return
 
-	var cell := _mouse_cell()
 	var data_sel := selected_type()
+	var cell := anchor_for(_mouse_cell(), data_sel, _placing_steps)
 
 	# 整块占地都要在平台范围内，否则不显示预览
 	var inside := true
@@ -371,8 +392,8 @@ func _process(_delta: float) -> void:
 	if not inside:
 		return
 
-	var fp := rotated_footprint(data_sel, _placing_steps)
-	_ghost.position = Vector2(cell) * TILE + Vector2(fp) * TILE * 0.5
+	# 预览的中心始终跟着光标，旋转时就是绕自己转（不会甩出去）
+	_ghost.position = get_global_mouse_position()
 	_ghost.rotation = _placing_steps * PI * 0.5
 	var free := can_place(cell) and stock_of(selected) > 0
 	_ghost.modulate = Color(1, 1, 1, 0.55) if free else Color(1, 0.45, 0.42, 0.5)

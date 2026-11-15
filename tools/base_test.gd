@@ -42,12 +42,14 @@ func _initialize() -> void:
 		str(builder.upgrade(Vector2i(10, 10))), builder.piece_at(Vector2i(10, 10)).level])
 	print("满级后升级    -> %s（应 false）" % str(builder.upgrade(Vector2i(10, 10))))
 	builder.rotate_at(Vector2i(10, 10), 1)
-	print("旋转 90°      -> steps=%d，占格 (10,11)=%s (11,10)=%s" % [
-		builder.piece_at(Vector2i(10, 10)).steps,
-		str(builder.piece_at(Vector2i(10, 11)) != null),
-		str(builder.piece_at(Vector2i(11, 10)) != null)])
+	var turned: Node2D = null
+	for c: Vector2i in builder._pieces.keys():
+		turned = builder._pieces[c]
+		break
+	print("旋转 90°      -> steps=%d，占地=%s，中心对齐原中心" % [
+		turned.steps, str(builder.rotated_footprint(turned.data, int(turned.steps)))])
 	print("回收          -> %s，库存 %d，剩余 %d" % [
-		str(builder.recycle(Vector2i(10, 10))), builder.stock_of(0), builder.piece_count()])
+		str(builder.recycle(turned.cell)), builder.stock_of(0), builder.piece_count()])
 	print("存档文件      -> %s" % str(FileAccess.file_exists("user://base_layout.json")))
 
 	quit()
