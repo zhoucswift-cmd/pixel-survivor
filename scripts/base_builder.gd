@@ -196,17 +196,6 @@ func upgrade(cell: Vector2i) -> bool:
 	return true
 
 
-## 滚轮调头：只在 0° / 90° 两档之间切换（1x2 和 2x1 互换）
-func flip_at(cell: Vector2i) -> void:
-	var piece: Node2D = _pieces.get(cell, null)
-	if piece == null:
-		if selected_type() == null:
-			return
-		_placing_steps = 0 if _placing_steps % 2 == 1 else 1
-		return
-	rotate_at(cell, 1 if int(piece.steps) % 2 == 0 else -1)
-
-
 ## 旋转：鼠标指着家具就转它，指着空地就转“下一件”的朝向
 func rotate_at(cell: Vector2i, direction: int) -> void:
 	var piece: Node2D = _pieces.get(cell, null)
@@ -328,10 +317,12 @@ func _unhandled_input(event: InputEvent) -> void:
 						recycle(cell)
 					else:
 						clear_selection()
-			MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN:
+			MOUSE_BUTTON_WHEEL_UP:
 				if event.pressed:
-					# 滚轮只做“调头”：在 0°/90° 之间切换（正反滚都一样）
-					flip_at(cell)
+					rotate_at(cell, 1)
+			MOUSE_BUTTON_WHEEL_DOWN:
+				if event.pressed:
+					rotate_at(cell, -1)
 
 
 ## Tab：进 / 出建造模式
