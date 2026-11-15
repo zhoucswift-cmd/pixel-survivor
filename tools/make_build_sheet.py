@@ -19,6 +19,7 @@ ASEPRITE = Path(r"C:\game\Aseprite.v1.3.17\Aseprite.exe")
 LUA = ROOT / "tools" / "dump_gun_frames.lua"
 SOURCE = ROOT / "assets" / "character.aseprite"
 UNARMED = ROOT / "assets" / "character_sheet_unarmed.png"
+PLAIN = ROOT / "assets" / "character_sheet.png"
 OUTPUT = ROOT / "assets" / "character_sheet_build.png"
 
 OUTLINE = (26, 22, 38, 255)
@@ -74,6 +75,24 @@ def put(px, x, y, color):
         px[int(x), int(y)] = color
 
 
+def strip_skin(image: Image) -> None:
+    """把画面里的肤色像素（多余的手/脖子）用周围颜色补掉。"""
+    from collections import Counter
+    px = image.load()
+    pts = [(x, y) for y in range(32) for x in range(32) if is_skin(px[x, y])]
+    for (x, y) in pts:
+        counts = Counter()
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = min(31, max(0, x + dx)), min(31, max(0, y + dy))
+            c = px[nx, ny]
+            if c[3] > 0 and not is_skin(c):
+                counts[c] += 1
+        if counts:
+            px[x, y] = counts.most_common(1)[0][0]
+        else:
+            px[x, y] = (0, 0, 0, 0)
+
+
 def hands_of(image: Image):
     """找出这一帧两只手的位置（左上 / 右半个 x）。"""
     px = image.load()
@@ -98,6 +117,7 @@ def dump_gun_frames(tmp: Path) -> None:
 
 def main() -> None:
     sheet = Image.open(UNARMED).convert("RGBA")
+    plain = Image.open(PLAIN).convert("RGBA")
     out = sheet.copy()
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -106,7 +126,9 @@ def main() -> None:
 
         for i in range(28):
             direction = i // 7
-            frame = out.crop((i * 32, 0, (i + 1) * 32, 32))
+            # 背影用“无手”身体，避免肩上那两个肤色点和腰带上那道肤色线
+            source = plain if direction == 1 else out
+            frame = source.crop((i * 32, 0, (i + 1) * 32, 32))
             px = frame.load()
 
             gun = Image.open(tmp / f"_gunframe_{i + 1:02d}.png").convert("RGBA")
@@ -118,10 +140,14 @@ def main() -> None:
             mid_y = sum(h[1] for h in hands) / len(hands)
 
             if direction == 1:
-                # 背对镜头：纸抱在身前、被身体挡住，只露出左右两边
+                # 背影：无手身体 + 去掉多余肤色（肩上的点和腰带上的线）
+                body = plain.crop((i * 32, 0, (i + 1) * 32, 32))
+                strip_skin(body)
+                frame = body.copy()
+                px = frame.load()
+
+                # 纸比身体宽，抱在身前，被身体挡住只露两边
                 draw_blueprint(px, 16, mid_y + 2, direction, width=20)
-                body = Image.open(UNARMED).convert("RGBA").crop(
-                    (i * 32, 0, (i + 1) * 32, 32))
                 body_px = body.load()
                 for yy in range(32):
                     for xx in range(32):
