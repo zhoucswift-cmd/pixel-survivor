@@ -96,19 +96,31 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
-## 玩家旁边的床（没有就返回 null）
-func _bed_near_player() -> Node2D:
+## 找离玩家最近、且在 reach 范围内的建筑；filter 决定哪些算候选
+func _nearest_piece(filter: Callable, reach: float) -> Node2D:
+	var best: Node2D = null
+	var best_dist := INF
+	var feet := _player.position
 	for piece: Node2D in _builder.all_pieces():
 		var data: BaseFurniture = piece.data
-		if data == null or data.occupied_texture == null:
+		if data == null or not filter.call(data):
 			continue
 		var fp := Vector2(data.footprint) * 16.0
 		if int(piece.steps) % 2 == 1:
 			fp = Vector2(fp.y, fp.x)
-		var rect := Rect2(piece.position - fp * 0.5, fp).grow(BED_REACH)
-		if rect.has_point(_player.position):
-			return piece
-	return null
+		var rect := Rect2(piece.position - fp * 0.5, fp)
+		# 玩家到这块占地的距离（站上去就是 0）
+		var inside := feet.clamp(rect.position, rect.end)
+		var dist := inside.distance_to(feet)
+		if dist <= reach and dist < best_dist:
+			best = piece
+			best_dist = dist
+	return best
+
+
+## 玩家旁边的床（没有就返回 null）
+func _bed_near_player() -> Node2D:
+	return _nearest_piece(func(d: BaseFurniture) -> bool: return d.occupied_texture != null, BED_REACH)
 
 
 ## 打开 / 关闭工作台制造面板（打开时锁住建造模式）
@@ -161,17 +173,7 @@ func _craft_label(cat: String) -> String:
 
 ## 玩家旁边的工作台（没有就返回 null）
 func _bench_near_player() -> Node2D:
-	for piece: Node2D in _builder.all_pieces():
-		var data: BaseFurniture = piece.data
-		if data == null or data.craft_category == "":
-			continue
-		var fp := Vector2(data.footprint) * 16.0
-		if int(piece.steps) % 2 == 1:
-			fp = Vector2(fp.y, fp.x)
-		var rect := Rect2(piece.position - fp * 0.5, fp).grow(BENCH_REACH)
-		if rect.has_point(_player.position):
-			return piece
-	return null
+	return _nearest_piece(func(d: BaseFurniture) -> bool: return d.craft_category != "", BENCH_REACH)
 
 
 ## 躺到床上
