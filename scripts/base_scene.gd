@@ -27,8 +27,11 @@ var _wake_position := Vector2.ZERO
 var _craft_open := false
 ## 打开制造面板前的鼠标模式（关面板时还原）
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
-## 是否是全景视角（F4 切换）
+## 是否是全景视角（V 切换）
 var _overview := true
+## 视角切换的过渡时长
+const ZOOM_TIME := 0.45
+var _zoom_tween: Tween = null
 
 
 func _ready() -> void:
@@ -44,7 +47,7 @@ func _ready() -> void:
 	# 基地是 30x30 格 = 480x480：放宽玩家活动范围和相机限制
 	_player.bounds = Rect2(24, 24, 432, 432)
 	# 默认把整张背景图装进屏幕（F4 可以切回普通视角）
-	_set_overview(true)
+	_set_overview(true, false)
 
 	# 基地里不能使用武器：不能开枪、朝向跟移动、手里也没有枪
 	_player.set_armed(false)
@@ -100,7 +103,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.physical_keycode == KEY_F2:
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
 			return
-		if event.physical_keycode == KEY_F4:
+		if event.physical_keycode == KEY_V:
 			_set_overview(not _overview)
 
 
@@ -178,25 +181,37 @@ func _bed_type() -> BaseFurniture:
 
 
 ## 全景视角：整张背景图刚好铺满屏幕；关掉就恢复正常跟随镜头
-func _set_overview(on: bool) -> void:
+## animate = true 时镜头缩放会平滑过渡（按 V 切换用）
+func _set_overview(on: bool, animate := true) -> void:
 	_overview = on
 	var camera: Camera2D = _player.get_node("Camera2D")
 	if camera == null:
 		return
+
+	# 镜头边界：两套边界都包住平台中心，切换不会跳
 	if on:
-		var view := get_viewport_rect().size
-		var fit := minf(view.x / BG_SIZE.x, view.y / BG_SIZE.y)
-		camera.zoom = Vector2(fit, fit)
 		camera.limit_left = BG_ORIGIN.x
 		camera.limit_top = BG_ORIGIN.y
 		camera.limit_right = BG_ORIGIN.x + BG_SIZE.x
 		camera.limit_bottom = BG_ORIGIN.y + BG_SIZE.y
 	else:
-		camera.zoom = Vector2.ONE
 		camera.limit_left = -118
 		camera.limit_top = 39
 		camera.limit_right = 598
 		camera.limit_bottom = 441
+
+	var view := get_viewport_rect().size
+	var target := minf(view.x / BG_SIZE.x, view.y / BG_SIZE.y) if on else 1.0
+	var want := Vector2(target, target)
+
+	if _zoom_tween != null and _zoom_tween.is_valid():
+		_zoom_tween.kill()
+	if not animate or camera.zoom.is_equal_approx(want):
+		camera.zoom = want
+		return
+	_zoom_tween = create_tween()
+	_zoom_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	_zoom_tween.tween_property(camera, "zoom", want, ZOOM_TIME)
 
 
 ## 每种台子的提示文案
