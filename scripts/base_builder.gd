@@ -353,9 +353,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		# 按住 R 会连续触发（键盘重复），一点一点转；其它键忽略重复，避免误触
 		if event.echo and key != KEY_R:
 			return
-		if key >= KEY_1 and key <= KEY_9:
-			select(key - KEY_1)
-		elif key == KEY_R:
+		if key == KEY_R:
 			rotate_at(_mouse_cell(), 1)
 		elif key == KEY_U:
 			upgrade(_mouse_cell())
