@@ -61,9 +61,14 @@ func setup(map: Node2D, player: Node2D) -> void:
 func select(index: int) -> void:
 	if types.is_empty():
 		return
-	index = clampi(index, 0, types.size() - 1)
-	# 再按一次同一个数字就取消选中
-	selected = -1 if index == selected else index
+	selected = clampi(index, 0, types.size() - 1)
+	_update_ghost()
+	selection_changed.emit(selected)
+
+
+## 取消选中（右键空地 / 放完一件 / 进建造模式）
+func clear_selection() -> void:
+	selected = -1
 	_update_ghost()
 	selection_changed.emit(selected)
 
@@ -160,10 +165,8 @@ func place(cell: Vector2i, type_index := -1, start_level := 1, steps := -1) -> b
 	layout_changed.emit()
 	_save_layout()
 
-	# 放完就取消选中：要再按数字键才会继续拿一件出来
-	selected = -1
-	_update_ghost()
-	selection_changed.emit(selected)
+	# 放完就取消选中：要再点一次家具栏才会继续拿一件出来
+	clear_selection()
 	return true
 
 
@@ -308,7 +311,10 @@ func _unhandled_input(event: InputEvent) -> void:
 					_finish_drag()
 			MOUSE_BUTTON_RIGHT:
 				if event.pressed:
-					recycle(cell)
+					if _pieces.has(cell):
+						recycle(cell)
+					else:
+						clear_selection()
 			MOUSE_BUTTON_WHEEL_UP:
 				if event.pressed:
 					rotate_at(cell, 1)
@@ -320,14 +326,12 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Tab：进 / 出建造模式
 func toggle_build_mode() -> void:
 	build_mode = not build_mode
-	# 刚进建造模式时不预选，按了数字键才出现要放的家具
-	selected = -1
+	# 刚进建造模式时不预选，点家具栏才会出现要放的家具
 	if _ghost != null:
 		_ghost.visible = false
 	if not build_mode and _dragging != null:
 		_finish_drag()
-	_update_ghost()
-	selection_changed.emit(selected)
+	clear_selection()
 	layout_changed.emit()
 	build_mode_changed.emit(build_mode)
 
