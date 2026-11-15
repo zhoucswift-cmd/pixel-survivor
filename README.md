@@ -105,6 +105,7 @@ C:\game\test
 │   ├─ make_concrete.lua      生成 16 块水泥瓦片（楼顶基地）
 │   ├─ make_furniture.lua     生成 4 件基地家具贴图
 │   ├─ make_bed.lua           生成床（16×32）
+│   ├─ make_stairs.lua        生成楼梯（48×80，3×5 格）
 │   ├─ make_base_map.py       生成基地 TileSet + base.tsx/base.tmj
 │   ├─ make_hud.lua           生成血条外框与填充图
 │   ├─ make_weapon_icon.lua   生成武器图标（霰弹枪 20×20）
