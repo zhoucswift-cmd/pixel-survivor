@@ -32,22 +32,22 @@ SKIN_D = (214, 158, 118, 255)
 PAPER_W, PAPER_H = 16, 11
 
 
-def draw_blueprint(px, cx, cy, direction):
+def draw_blueprint(px, cx, cy, direction, width=PAPER_W):
     """蓝白相间的图纸：每 2 列换一次色，深色描边。"""
     cx, cy = int(round(cx)), int(round(cy))
-    x0 = cx - PAPER_W // 2
+    x0 = cx - width // 2
     y0 = cy - PAPER_H // 2
 
-    for x in range(PAPER_W):
+    for x in range(width):
         for y in range(PAPER_H):
-            if x in (0, PAPER_W - 1) or y in (0, PAPER_H - 1):
+            if x in (0, width - 1) or y in (0, PAPER_H - 1):
                 put(px, x0 + x, y0 + y, OUTLINE)
             else:
                 stripe = ((x - 1) // 2) % 2
                 put(px, x0 + x, y0 + y, PAPER_D if stripe == 0 else PAPER)
 
     # 上下各压一条浅色边，像纸的卷边
-    for x in range(1, PAPER_W - 1):
+    for x in range(1, width - 1):
         put(px, x0 + x, y0 + 1, PAPER_L if x % 3 else PAPER)
     return x0, y0
 
@@ -114,25 +114,23 @@ def main() -> None:
             if not hands:
                 hands = [(13.0, 20.0), (20.0, 20.0)]
 
-            ox, oy = 0, 0
-            if direction == 0:
-                oy = 1
-            elif direction == 1:
-                oy = -1
-            elif direction == 2:
-                ox = -1
-            else:
-                ox = 1
-
-            # 面朝上（背对镜头）时蓝图抱在身前，被身体挡住，看不到
-            if direction == 1:
-                continue
-
-            # 蓝图在身前，双手按在图纸左右两边
             mid_x = sum(h[0] for h in hands) / len(hands)
             mid_y = sum(h[1] for h in hands) / len(hands)
-            x0, y0 = draw_blueprint(px, mid_x, mid_y + 2, direction)
-            draw_hands(px, x0, y0)
+
+            if direction == 1:
+                # 背对镜头：纸抱在身前、被身体挡住，只露出左右两边
+                draw_blueprint(px, 16, mid_y + 2, direction, width=20)
+                body = Image.open(UNARMED).convert("RGBA").crop(
+                    (i * 32, 0, (i + 1) * 32, 32))
+                body_px = body.load()
+                for yy in range(32):
+                    for xx in range(32):
+                        if body_px[xx, yy][3] > 0:
+                            px[xx, yy] = body_px[xx, yy]
+            else:
+                # 其余方向：纸在身前，双手扶在两边
+                x0, y0 = draw_blueprint(px, mid_x, mid_y + 2, direction)
+                draw_hands(px, x0, y0)
 
             out.paste(frame, (i * 32, 0))
 
