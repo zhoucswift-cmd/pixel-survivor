@@ -24,7 +24,7 @@ color = Color(0.84, 0.88, 1, 1)
 
 [node name="City" type="Sprite2D" parent="."]
 z_index = -20
-position = Vector2(-278, -51)
+position = Vector2(-266, -130)
 centered = false
 texture = ExtResource("8_city")
 

@@ -15,8 +15,8 @@ const BOARD := 30
 const STAIRS_RECT := Rect2(416, 336, 48, 80)
 ## 离床多远之内能按 E 躺上去
 ## 背景图尺寸和摆放位置（scenes/base.tscn 里 City 节点也是这个）
-const BG_SIZE := Vector2(1036, 582)
-const BG_ORIGIN := Vector2(-278, -51)
+const BG_SIZE := Vector2(1010, 720)
+const BG_ORIGIN := Vector2(-266, -130)
 const BED_REACH := 26.0
 ## 离工作台多远之内能按 E 做东西
 const BENCH_REACH := 26.0
@@ -195,7 +195,7 @@ func _set_overview(on: bool, animate := true) -> void:
 	camera.limit_bottom = BG_ORIGIN.y + BG_SIZE.y
 
 	var view := get_viewport_rect().size
-	var target := minf(view.x / BG_SIZE.x, view.y / BG_SIZE.y) if on else 1.0
+	var target := maxf(view.x / BG_SIZE.x, view.y / BG_SIZE.y) if on else 1.0
 	var want := Vector2(target, target)
 
 	if _zoom_tween != null and _zoom_tween.is_valid():
