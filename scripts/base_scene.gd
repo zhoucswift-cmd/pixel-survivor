@@ -100,6 +100,8 @@ func _lie_down(bed: Node2D) -> void:
 	# 相机跟着挪到床上，画面里能看到整个人躺着
 	_player.position = bed.position + Vector2(0, -6)
 	bed.set_occupied(true)
+	# 睡着的时候不让进建造模式
+	_builder.set_build_locked(true)
 
 
 ## 起床
@@ -108,6 +110,7 @@ func _wake_up() -> void:
 		return
 	_sleeping_piece.set_occupied(false)
 	_sleeping_piece = null
+	_builder.set_build_locked(false)
 	_player.position = _wake_position
 	_player.visible = true
 	_player.set_physics_process(true)

@@ -59,8 +59,10 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var screen := get_viewport_rect().size
 
-	# 非建造模式：只留一条 Tab 提示
+	# 非建造模式：只留一条 Tab 提示（睡着等锁住的情况下不显示）
 	if not _builder.build_mode:
+		if _builder.build_locked:
+			return
 		var hint := "TAB - BUILD"
 		var size := font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 8)
 		draw_string(font, Vector2((screen.x - size.x) * 0.5, screen.y - 6.0), hint,

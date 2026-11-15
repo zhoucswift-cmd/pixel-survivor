@@ -25,6 +25,8 @@ const BLOCKED_TILES := [Vector2i(7, 1), Vector2i(0, 2), Vector2i(1, 2)]
 var selected := -1
 ## 建造模式（Tab 开关）：关着的时候就是纯走路，不显示预览也不能摆东西
 var build_mode := false
+## 锁住建造模式（比如躺着睡觉的时候，按 Tab 没反应）
+var build_locked := false
 
 var _pieces: Dictionary = {}      # Vector2i -> PlacedFurniture
 var _stock: Dictionary = {}       # 家具序号 -> 仓库里还剩几个
@@ -66,6 +68,20 @@ func select(index: int) -> void:
 	selected = clampi(index, 0, types.size() - 1)
 	_update_ghost()
 	selection_changed.emit(selected)
+
+
+## 锁 / 解锁建造模式；锁上的时候会顺手退出建造模式
+func set_build_locked(value: bool) -> void:
+	if build_locked == value:
+		return
+	build_locked = value
+	if value and build_mode:
+		build_mode = false
+		clear_selection()
+		if _ghost != null:
+			_ghost.visible = false
+		layout_changed.emit()
+		build_mode_changed.emit(false)
 
 
 ## 取消选中（右键空地 / 放完一件 / 进建造模式）
@@ -375,6 +391,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Tab：进 / 出建造模式
 func toggle_build_mode() -> void:
+	if build_locked:
+		return
 	build_mode = not build_mode
 	# 刚进建造模式时不预选，点家具栏才会出现要放的家具
 	if _ghost != null:
