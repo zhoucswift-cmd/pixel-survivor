@@ -167,7 +167,7 @@ func _process(_delta: float) -> void:
 	# 站在工作台旁边：提示造东西
 	if _bench_near_player() != null:
 		_travel.visible = true
-		_travel.text = "E - CRAFT BED"
+		_travel.text = "E - CRAFT"
 		return
 
 	# 站进楼梯里才提示按 E 下楼

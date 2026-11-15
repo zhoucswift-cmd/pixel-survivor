@@ -605,7 +605,7 @@ after 3.5s-> 0 只（确认不再刷）
   **从草地按 E 回基地时，玩家会直接出现在楼梯上**（`scripts/game_state.gd` 这个 autoload 传状态）；
   那 3×5 格不能摆家具
   （`base_builder.gd` 的 `blocked_cells`）。
-- **工作台（造东西）**：站到工作台旁边会提示 `E - CRAFT BED`，按 **E** 就往仓库里加一张床
+- **工作台（造东西）**：站到工作台旁边会提示 `E - CRAFT`，按 **E** 就往仓库里加一张床
   （`base_scene.gd` 的 `_bench_near_player()` + `base_builder.add_stock()`）。
   这样仓库里只剩 1 张床时，可以靠工作台继续造。
 - **消防栓（草地）**：`scenes/hydrant.tscn`，摆在草地 `(232, 104)`。被子弹打中（在武器的射程/扇形内）
