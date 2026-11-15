@@ -62,12 +62,12 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if event.button_index != MOUSE_BUTTON_LEFT or _builder == null:
 		return
+	if _mode == "craft":
+		# 制造面板暂时是空的，点哪都不做事
+		return
 	for i in _builder.types.size():
 		if _slot_rect(i).has_point(event.position):
-			if _mode == "craft":
-				craft_requested.emit(i)
-			else:
-				_builder.select(i)
+			_builder.select(i)
 			accept_event()
 			return
 
@@ -115,39 +115,47 @@ func _draw() -> void:
 		"CRAFT" if crafting else "BUILD",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.95, 0.93, 0.85, 0.95))
 
-	# ===== 物品列表 =====
-	var types: Array = _builder.types
-	for i in types.size():
-		var row := _slot_rect(i)
-		var is_selected: bool = (i == _selected) and not crafting
-		var data: BaseFurniture = types[i]
+	# ===== 面板内容 =====
+	if crafting:
+		# 制造面板暂时没有配方：留空，只给一句提示
+		var tip := "NO RECIPES YET"
+		var tip_size := font.get_string_size(tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 6)
+		draw_string(font, Vector2(panel.position.x + (panel.size.x - tip_size.x) * 0.5,
+			panel.position.y + HEADER_H + 30.0), tip,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.62, 0.66, 0.74, 0.9))
+	else:
+		var types: Array = _builder.types
+		for i in types.size():
+			var row := _slot_rect(i)
+			var is_selected: bool = i == _selected
+			var data: BaseFurniture = types[i]
 
-		# 行底色
-		draw_rect(row, Color(0.72, 0.24, 0.20, 0.95) if is_selected else Color(0.13, 0.14, 0.17, 1.0))
-		draw_rect(row, Color(1, 1, 1, 0.55) if is_selected else Color(1, 1, 1, 0.10), false, 1.0)
-		# 左边一条色带，像商店条目的图标底
-		draw_rect(Rect2(row.position, Vector2(3.0, row.size.y)),
-			Color(0.95, 0.78, 0.35, 1.0) if is_selected else Color(0.35, 0.38, 0.45, 1.0))
+			# 行底色
+			draw_rect(row, Color(0.72, 0.24, 0.20, 0.95) if is_selected else Color(0.13, 0.14, 0.17, 1.0))
+			draw_rect(row, Color(1, 1, 1, 0.55) if is_selected else Color(1, 1, 1, 0.10), false, 1.0)
+			# 左边一条色带，像商店条目的图标底
+			draw_rect(Rect2(row.position, Vector2(3.0, row.size.y)),
+				Color(0.95, 0.78, 0.35, 1.0) if is_selected else Color(0.35, 0.38, 0.45, 1.0))
 
-		# 图标
-		if data != null and data.texture != null:
-			var tex: Texture2D = data.texture
-			var box := Vector2(row.size.y - 8.0, row.size.y - 8.0)
-			var tex_size := tex.get_size()
-			var fit := minf(box.x / tex_size.x, box.y / tex_size.y)
-			var draw_size := tex_size * fit
-			var pos := row.position + Vector2(6.0, 4.0) + (box - draw_size) * 0.5
-			draw_texture_rect(tex, Rect2(pos, draw_size), false)
+			# 图标
+			if data != null and data.texture != null:
+				var tex: Texture2D = data.texture
+				var box := Vector2(row.size.y - 8.0, row.size.y - 8.0)
+				var tex_size := tex.get_size()
+				var fit := minf(box.x / tex_size.x, box.y / tex_size.y)
+				var draw_size := tex_size * fit
+				var pos := row.position + Vector2(6.0, 4.0) + (box - draw_size) * 0.5
+				draw_texture_rect(tex, Rect2(pos, draw_size), false)
 
-		# 名字 + 数量
-		var name_text: String = "-" if data == null else data.short_name
-		draw_string(font, Vector2(row.position.x + 26.0, row.position.y + 13.0), name_text,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.96, 0.96, 0.92, 0.95))
-		var stock_text := "x%d" % _builder.stock_of(i)
-		var stock_size := font.get_string_size(stock_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 7)
-		draw_string(font, Vector2(row.position.x + row.size.x - stock_size.x - 4.0,
-			row.position.y + 13.0), stock_text,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.86, 0.9, 1.0, 0.95))
+			# 名字 + 数量
+			var name_text: String = "-" if data == null else data.short_name
+			draw_string(font, Vector2(row.position.x + 26.0, row.position.y + 13.0), name_text,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.96, 0.96, 0.92, 0.95))
+			var stock_text := "x%d" % _builder.stock_of(i)
+			var stock_size := font.get_string_size(stock_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 7)
+			draw_string(font, Vector2(row.position.x + row.size.x - stock_size.x - 4.0,
+				row.position.y + 13.0), stock_text,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.86, 0.9, 1.0, 0.95))
 
 	# ===== 操作提示：放在左下角的空白处 =====
 	var lines := [
@@ -156,7 +164,7 @@ func _draw() -> void:
 		"R ROTATE   U UPGRADE   DEL CLEAR",
 	]
 	if crafting:
-		lines = ["LMB CRAFT", "E CLOSE"]
+		lines = ["E / TAB CLOSE"]
 	for i in lines.size():
 		draw_string(font, Vector2(6.0, screen.y - 22.0 + float(i) * 8.0), lines[i],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.78, 0.84, 0.95, 0.9))
