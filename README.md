@@ -143,7 +143,7 @@ C:\game\test
 |---|---|---|---|---|
 | `assets/character_sheet.png` | 896×32 | 32×32 × 28 帧（横排） | 玩家身体（**无枪**，横向瞄准时用） | `character.aseprite` |
 | `assets/character_sheet_gun.png` | 896×32 | 同上 | 玩家身体（**带枪**，上下瞄准时用） | `character.aseprite` |
-| `assets/character_sheet_unarmed.png` | 896×32 | 同上 | 玩家身体（**空手**，基地里用） | `tools/make_unarmed_sheet.py` |
+| `assets/character_sheet_unarmed.png` | 896×32 | 同上 | 玩家身体（**空手**，基地里用，已清掉多余肤色） | `tools/make_unarmed_sheet.py` |
 | `assets/character_sheet_build.png` | 896×32 | 同上 | 玩家身体（**拿蓝图 + 扳手**，建造模式用） | `tools/make_build_sheet.py` |
 | `assets/weapons/shotgun_held.png` | 32×32 | 单帧 | 手持霰弹枪（含手，绕握把旋转） | `character.aseprite` 的 `gun` 层 |
 | `assets/zombie_sheet.png` | 1024×32 | 32×32 × 32 帧 | 僵尸 4 方向 × 8 帧（idle 1 + walk 4 + attack 3） | `zombie.aseprite` |
@@ -573,7 +573,7 @@ after 3.5s-> 0 只（确认不再刷）
 
 - **基地里不能使用武器、手里也没有枪**：`player.set_armed(false)` 之后不能开枪、不能换弹、
   不跟鼠标瞄准，朝向跟着移动方向；身体换成**空手**那套帧（`character_sheet_unarmed.png`，
-  身体 + 手、没有枪），就是普通走路动画。
+  干净的躯干、没有枪也没有浮空的手，肩侧和腰带上不会有多余的肉色像素），就是普通走路动画。
 - **基地 HUD 很干净**：没有血条、没有弹药（基地里不打架），只保留底部建造栏和边缘的
   `E - GO DOWNTOWN` 提示。
 - **建造模式换姿势**：按 Tab 后角色换成**双手捧着一张报纸大小的图纸**（蓝白相间的竖条纹、

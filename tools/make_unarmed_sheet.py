@@ -28,6 +28,29 @@ def is_skin(pixel) -> bool:
     return a > 0 and r >= 190 and g >= 130 and b >= 90 and r > g > b
 
 
+def strip_stray_skin(image: Image, max_y: int) -> None:
+    """去掉脸以下的多余肤色像素（原画里肩侧和腰带上的小色块）。
+
+    脸所在的行不动，其余肤色用四邻域最常见的非肤色补上。
+    """
+    from collections import Counter
+    px = image.load()
+    for y in range(max_y + 1, 32):
+        for x in range(32):
+            if not is_skin(px[x, y]):
+                continue
+            counts = Counter()
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = min(31, max(0, x + dx)), min(31, max(0, y + dy))
+                c = px[nx, ny]
+                if c[3] > 0 and not is_skin(c):
+                    counts[c] += 1
+            if counts:
+                px[x, y] = counts.most_common(1)[0][0]
+            else:
+                px[x, y] = (0, 0, 0, 0)
+
+
 def dump_gun_frames(tmp: Path) -> None:
     # 让 Lua 把每一帧的 gun 层 cel 写到临时目录
     text = LUA.read_text(encoding="utf-8")
@@ -47,14 +70,17 @@ def main() -> None:
         tmp = Path(tmpdir)
         dump_gun_frames(tmp)
 
+        # 每个方向“脸”最低到第几行：朝上（背对）没有脸，全清
+        face_bottom = {0: 16, 1: -1, 2: 16, 3: 16}
+
         for i in range(FRAMES):
-            gun = Image.open(tmp / f"_gunframe_{i + 1:02d}.png").convert("RGBA")
-            gp = gun.load()
-            for y in range(32):
-                for x in range(32):
-                    c = gp[x, y]
-                    if is_skin(c):
-                        out_px[i * 32 + x, y] = c
+            direction = i // 7
+            frame = out.crop((i * 32, 0, (i + 1) * 32, 32))
+            strip_stray_skin(frame, face_bottom[direction])
+            out.paste(frame, (i * 32, 0))
+
+            # 不把 gun 层的手贴回来：空手状态就是干净的躯干，避免肩侧/腰带上
+            # 出现“浮空的手”那种色块
 
     out.save(OUTPUT)
     print(f"saved {OUTPUT}  {out.size[0]}x{out.size[1]} ({FRAMES} frames)")
