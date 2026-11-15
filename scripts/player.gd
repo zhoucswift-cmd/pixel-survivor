@@ -99,7 +99,7 @@ var _frames_baked: SpriteFrames
 var _frames_unarmed: SpriteFrames
 var _frames_build: SpriteFrames
 ## 当前衣服颜色（a=0 表示默认蓝）
-var _look_base := Color(0, 0, 0, -1)
+var _look_sig := ""
 ## 染色后的站立表（背包预览用）
 var look_sheet: Texture2D = null
 ## 基地建造模式：手里拿蓝图和扳手
@@ -134,7 +134,7 @@ func _ready() -> void:
 	_sprite.sprite_frames = _frames_plain
 	_sprite.play("idle_down")
 	_sprite.animation_finished.connect(_on_animation_finished)
-	apply_look(GameState.jacket_color())
+	apply_equipment()
 
 	var shell := Image.create(2, 2, false, Image.FORMAT_RGBA8)
 	shell.fill(Color(0.86, 0.67, 0.28))
@@ -598,17 +598,18 @@ func _blink() -> void:
 	tween.tween_property(_sprite, "modulate:a", 1.0, 0.12)
 
 
-## 把横向精灵表切成 12 个动画（4 方向 × idle/walk/shoot）
-## 换衣服：按颜色把所有身体贴图重新上色（a=0 表示恢复默认）
-func apply_look(base: Color) -> void:
-	if base == _look_base:
+## 换装：按 GameState 里每个槽位穿戴的装备重新刷角色贴图
+func apply_equipment() -> void:
+	var sig := GameState.look_signature() if GameState != null else ""
+	if sig == _look_sig:
 		return
-	_look_base = base
-	look_sheet = _recolor_texture(load(SHEET_PATH), base)
-	_frames_plain = _build_sprite_frames(SHEET_PATH, base)
-	_frames_baked = _build_sprite_frames(SHEET_BAKED_PATH, base)
-	_frames_unarmed = _build_sprite_frames(SHEET_UNARMED_PATH, base)
-	_frames_build = _build_sprite_frames(SHEET_BUILD_PATH, base)
+	_look_sig = sig
+
+	look_sheet = _recolor_texture(load(SHEET_PATH))
+	_frames_plain = _build_sprite_frames(SHEET_PATH)
+	_frames_baked = _build_sprite_frames(SHEET_BAKED_PATH)
+	_frames_unarmed = _build_sprite_frames(SHEET_UNARMED_PATH)
+	_frames_build = _build_sprite_frames(SHEET_BUILD_PATH)
 
 	# 重新套用当前应该显示的贴图
 	if not armed:
@@ -619,13 +620,24 @@ func apply_look(base: Color) -> void:
 		_set_body_sheet(_frames_plain)
 
 
+## 某个槽位的颜色（没穿就是透明）
+func _slot_color(slot: String) -> Color:
+	if GameState == null:
+		return Color(0, 0, 0, 0)
+	return GameState.slot_color(slot)
+
+
 ## 颜色 -> 整数 key
 func _color_key(c: Color) -> int:
 	return c.r8 | (c.g8 << 8) | (c.b8 << 16)
 
 
-## 把贴图里衣服的三个色阶换成新颜色
-func _recolor_texture(texture: Texture2D, base: Color) -> Texture2D:
+func _rgb(c: Color) -> Array:
+	return [c.r8, c.g8, c.b8]
+
+
+## 按装备情况把贴图重新上色：没穿的部位露皮肤 / 只留一条红内裤
+func _recolor_texture(texture: Texture2D) -> Texture2D:
 	var img: Image = texture.get_image()
 	if img == null:
 		return texture
@@ -633,27 +645,39 @@ func _recolor_texture(texture: Texture2D, base: Color) -> Texture2D:
 		img.convert(Image.FORMAT_RGBA8)
 	var data: PackedByteArray = img.get_data()
 
-	# 没穿衣服：光膀子 + 红内裤；穿了衣服：刷成衣服的颜色
+	var jacket := _slot_color("jacket")
+	var pants := _slot_color("pants")
+	var boots := _slot_color("boots")
+
 	var table := {}
-	if base.a <= 0.0:
-		table = {
-			_color_key(SHIRT_DARK): [SKIN_DARK.r8, SKIN_DARK.g8, SKIN_DARK.b8],
-			_color_key(SHIRT_MID): [SKIN_MID.r8, SKIN_MID.g8, SKIN_MID.b8],
-			_color_key(SHIRT_LIGHT): [SKIN_LIGHT.r8, SKIN_LIGHT.g8, SKIN_LIGHT.b8],
-			_color_key(PANTS_MID): [BRIEF.r8, BRIEF.g8, BRIEF.b8],
-			_color_key(PANTS_DARK): [BRIEF_DARK.r8, BRIEF_DARK.g8, BRIEF_DARK.b8],
-			_color_key(BOOT_MID): [SKIN_DARK.r8, SKIN_DARK.g8, SKIN_DARK.b8],
-			_color_key(BOOT_DARK): [SKIN_MID.r8, SKIN_MID.g8, SKIN_MID.b8],
-			_color_key(BELT): [BRIEF.r8, BRIEF.g8, BRIEF.b8],
-		}
+	# 上衣：穿了就染色，没穿就露皮肤
+	if jacket.a > 0.0:
+		table[_color_key(SHIRT_DARK)] = _rgb(jacket.darkened(0.32))
+		table[_color_key(SHIRT_MID)] = _rgb(jacket)
+		table[_color_key(SHIRT_LIGHT)] = _rgb(jacket.lightened(0.28))
 	else:
-		var dark := base.darkened(0.32)
-		var light := base.lightened(0.28)
-		table = {
-			_color_key(SHIRT_DARK): [dark.r8, dark.g8, dark.b8],
-			_color_key(SHIRT_MID): [base.r8, base.g8, base.b8],
-			_color_key(SHIRT_LIGHT): [light.r8, light.g8, light.b8],
-		}
+		table[_color_key(SHIRT_DARK)] = _rgb(SKIN_DARK)
+		table[_color_key(SHIRT_MID)] = _rgb(SKIN_MID)
+		table[_color_key(SHIRT_LIGHT)] = _rgb(SKIN_LIGHT)
+
+	# 裤子：穿了就是裤子颜色，没穿就只剩红内裤（腰带也变成内裤边）
+	if pants.a > 0.0:
+		table[_color_key(PANTS_MID)] = _rgb(pants)
+		table[_color_key(PANTS_DARK)] = _rgb(pants.darkened(0.30))
+		table[_color_key(BELT)] = _rgb(BELT)
+	else:
+		table[_color_key(PANTS_MID)] = _rgb(BRIEF)
+		table[_color_key(PANTS_DARK)] = _rgb(BRIEF_DARK)
+		table[_color_key(BELT)] = _rgb(BRIEF)
+
+	# 鞋子：穿了就染色，没穿就是光脚
+	if boots.a > 0.0:
+		table[_color_key(BOOT_MID)] = _rgb(boots)
+		table[_color_key(BOOT_DARK)] = _rgb(boots.darkened(0.30))
+	else:
+		table[_color_key(BOOT_MID)] = _rgb(SKIN_DARK)
+		table[_color_key(BOOT_DARK)] = _rgb(SKIN_MID)
+
 	for i in range(0, data.size(), 4):
 		if data[i + 3] == 0:
 			continue
@@ -668,9 +692,9 @@ func _recolor_texture(texture: Texture2D, base: Color) -> Texture2D:
 	return ImageTexture.create_from_image(out)
 
 
-func _build_sprite_frames(path: String, tint := Color(0, 0, 0, 0)) -> SpriteFrames:
+func _build_sprite_frames(path: String) -> SpriteFrames:
 	var texture: Texture2D = load(path)
-	texture = _recolor_texture(texture, tint)
+	texture = _recolor_texture(texture)
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
 

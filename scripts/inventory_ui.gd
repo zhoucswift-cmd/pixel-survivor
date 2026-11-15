@@ -1,6 +1,6 @@
 extends Control
 ## 背包界面：按 B 打开 / 关闭。
-## 布局模仿生存游戏：左侧人物 + 装备栏 + 属性，中间物品格子，右侧物品详情。
+## 左侧人物 + 装备栏 + 属性，中间物品格子，右侧物品详情。
 
 const ITEMS := [
 	{
@@ -14,24 +14,34 @@ const ITEMS := [
 		"desc": ["Coiled hemp rope.", "Used for crafting", "and repairs."],
 	},
 	{
-		"id": "shirt_blue", "name": "BLUE SHIRT", "type": "EQUIP",
-		"tex": "res://assets/base/shirt.png", "tint": Color8(63, 111, 181),
-		"equip": "blue", "own": true,
+		"id": "shirt_blue", "name": "BLUE SHIRT", "type": "EQUIP", "slot": "jacket",
+		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(63, 111, 181), "own": true,
 		"desc": ["A worn blue shirt.", "Click to wear it."],
 	},
 	{
-		"id": "shirt_red", "name": "RED SHIRT", "type": "EQUIP",
-		"tex": "res://assets/base/shirt.png", "tint": Color8(181, 63, 63),
-		"equip": "red", "own": true,
+		"id": "shirt_red", "name": "RED SHIRT", "type": "EQUIP", "slot": "jacket",
+		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(181, 63, 63), "own": true,
 		"desc": ["A faded red shirt.", "Click to wear it."],
 	},
 	{
-		"id": "shirt_green", "name": "GREEN SHIRT", "type": "EQUIP",
-		"tex": "res://assets/base/shirt.png", "tint": Color8(74, 150, 88),
-		"equip": "green", "own": true,
+		"id": "shirt_green", "name": "GREEN SHIRT", "type": "EQUIP", "slot": "jacket",
+		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(74, 150, 88), "own": true,
 		"desc": ["A grass-stained shirt.", "Click to wear it."],
 	},
+	{
+		"id": "pants_dark", "name": "DARK PANTS", "type": "EQUIP", "slot": "pants",
+		"tex": "res://assets/base/icon_pants.png", "tint": Color8(54, 60, 82), "own": true,
+		"desc": ["Rugged work pants.", "Click to wear them."],
+	},
+	{
+		"id": "boots_brown", "name": "BROWN BOOTS", "type": "EQUIP", "slot": "boots",
+		"tex": "res://assets/base/icon_boots.png", "tint": Color8(112, 74, 46), "own": true,
+		"desc": ["Sturdy leather boots.", "Click to wear them."],
+	},
 ]
+
+## 左侧装备栏的槽位顺序（前 4 个左列，后 3 个右列）
+const EQUIP_SLOTS := ["hat", "jacket", "pants", "boots", "weapon", "backpack", "ring"]
 
 const PANEL := Rect2(4, 5, 312, 170)
 const TAB_H := 15.0
@@ -50,7 +60,7 @@ const GRID_ROWS := 4
 const DETAIL := Rect2(248, 28, 64, 142)
 
 var _open := false
-var _selected := 0
+var _selected := -1
 var _textures: Array[Texture2D] = []
 var _sheet: Texture2D = null
 var _gs: Node = null
@@ -58,7 +68,6 @@ var _player: Node = null
 var _atk := 0
 var _def := 0
 var _speed := 100
-## 打开背包前系统鼠标是什么状态（关掉时还原）
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 
@@ -90,12 +99,10 @@ func toggle() -> void:
 	visible = _open
 	if _open:
 		_selected = -1
-		# 背包要用鼠标点格子：先把系统光标放出来
 		_prev_mouse_mode = Input.mouse_mode
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		_refresh_stats()
 	else:
-		# 关掉时恢复（草地是隐藏光标 + 自绘准心）
 		Input.set_mouse_mode(_prev_mouse_mode)
 	get_tree().paused = _open
 	queue_redraw()
@@ -114,9 +121,6 @@ func _refresh_stats() -> void:
 		var weapon = _player.weapon
 		if weapon != null and _player.armed:
 			_atk = int(round(weapon.damage))
-		_def = 0
-		if _player is CharacterBody2D:
-			_speed = 100
 
 
 func _slot_rect(index: int) -> Rect2:
@@ -132,52 +136,18 @@ func _equip_rect(index: int) -> Rect2:
 	return Rect2(78, 36 + float(index - 4) * (EQUIP + 3.0), EQUIP, EQUIP)
 
 
-## 背包格子里应该显示的物品（穿在身上的衣服不显示，可穿戴物不显示数量）
+## 背包格子里应该显示的物品（穿在身上的不显示）
 func _visible_indices() -> Array:
 	var out := []
 	for i in ITEMS.size():
 		var data: Dictionary = ITEMS[i]
-		if data.has("equip"):
-			# 可穿戴：没穿在身上才在包里
-			var worn: bool = _gs != null and _gs.equipped_jacket == data["equip"]
+		if data.has("slot"):
+			var worn: bool = _gs != null and _gs.equipped.get(data["slot"], "") == data["id"]
 			if not worn:
 				out.append(i)
 		elif _count_of(i) > 0:
 			out.append(i)
 	return out
-
-
-## 把当前穿着的衣服刷到玩家身上
-func _apply_look() -> void:
-	var p = get_tree().current_scene.get_node_or_null("Player") if get_tree().current_scene != null else null
-	if p != null and p.has_method("apply_look"):
-		p.apply_look(_gs.jacket_color() if _gs != null else Color(0, 0, 0, 0))
-	_refresh_stats()
-
-
-## 脱下衣服，放回背包
-func _unequip_if_clicked(pos: Vector2) -> bool:
-	if _gs == null or _gs.equipped_jacket == "":
-		return false
-	if not _equip_rect(1).has_point(pos):
-		return false
-	_gs.equipped_jacket = ""
-	_selected = -1
-	_apply_look()
-	queue_redraw()
-	return true
-
-
-## 点物品：能穿的直接穿上，角色外观立刻变
-func _try_equip(index: int) -> void:
-	if index < 0 or index >= ITEMS.size():
-		return
-	var data: Dictionary = ITEMS[index]
-	if not data.has("equip"):
-		return
-	if _gs != null:
-		_gs.equipped_jacket = data["equip"]
-	_apply_look()
 
 
 func _count_of(index: int) -> int:
@@ -191,26 +161,56 @@ func _count_of(index: int) -> int:
 	return int(_gs.get(data["id"]))
 
 
-func _input(event: InputEvent) -> void:
-	if not _open:
+## 把当前装备刷到玩家身上
+func _apply_look() -> void:
+	var p = get_tree().current_scene.get_node_or_null("Player") if get_tree().current_scene != null else null
+	if p != null and p.has_method("apply_equipment"):
+		p.apply_equipment()
+	_refresh_stats()
+
+
+## 点物品：能穿的直接穿上
+func _try_equip(index: int) -> void:
+	if index < 0 or index >= ITEMS.size():
 		return
-	var vis := _visible_indices()
-	if event is InputEventMouseButton and event.pressed \
-		and event.button_index == MOUSE_BUTTON_LEFT:
-		# 点左侧装备格：把衣服脱回背包
-		if _unequip_if_clicked(event.position):
-			get_viewport().set_input_as_handled()
-			return
-		for slot in vis.size():
-			if _slot_rect(slot).has_point(event.position):
-				_selected = vis[slot]
-				_try_equip(_selected)
-				queue_redraw()
-				get_viewport().set_input_as_handled()
-				return
+	var data: Dictionary = ITEMS[index]
+	if not data.has("slot") or _gs == null:
+		return
+	_gs.equip(data["slot"], data["id"])
+	_apply_look()
 
 
-## 每帧看鼠标压在哪个格子上：移开就没有黄圈
+## 点左侧装备格：脱下来放回背包
+func _unequip_if_clicked(pos: Vector2) -> bool:
+	if _gs == null:
+		return false
+	for i in 7:
+		if not _equip_rect(i).has_point(pos):
+			continue
+		var slot: String = EQUIP_SLOTS[i]
+		if _gs.equipped.get(slot, "") == "":
+			return false
+		_gs.unequip(slot)
+		_selected = -1
+		_apply_look()
+		queue_redraw()
+		return true
+	return false
+
+
+## 某个槽位当前穿的物品（没穿返回空字典）
+func _equipped_item(slot_name: String) -> Dictionary:
+	if _gs == null:
+		return {}
+	var id: String = _gs.equipped.get(slot_name, "")
+	if id == "":
+		return {}
+	for data: Dictionary in ITEMS:
+		if data.get("id", "") == id:
+			return data
+	return {}
+
+
 func _process(_delta: float) -> void:
 	if not _open:
 		return
@@ -224,6 +224,24 @@ func _process(_delta: float) -> void:
 	if hovered != _selected:
 		_selected = hovered
 		queue_redraw()
+
+
+func _input(event: InputEvent) -> void:
+	if not _open:
+		return
+	var vis := _visible_indices()
+	if event is InputEventMouseButton and event.pressed \
+		and event.button_index == MOUSE_BUTTON_LEFT:
+		if _unequip_if_clicked(event.position):
+			get_viewport().set_input_as_handled()
+			return
+		for slot in vis.size():
+			if _slot_rect(slot).has_point(event.position):
+				_selected = vis[slot]
+				_try_equip(_selected)
+				queue_redraw()
+				get_viewport().set_input_as_handled()
+				return
 
 
 func _draw() -> void:
@@ -275,19 +293,21 @@ func _draw() -> void:
 		draw_texture_rect_region(preview_sheet, Rect2(CHAR_BOX.position + Vector2(3, 4), Vector2(32, 32)),
 			Rect2(0, 0, 32, 32))
 
-	# 装备格（左 4：帽子/外套/裤子/鞋；右 3：武器/背包/饰品）
-	var shirt_tex: Texture2D = _textures[3]     # ITEMS 里第一件 shirt
+	# 装备格
 	for i in 7:
 		var r := _equip_rect(i)
 		draw_rect(r, Color(0.16, 0.17, 0.21, 1.0))
 		draw_rect(r, Color(1, 1, 1, 0.10), false, 1.0)
-		if i == 1 and _gs != null and _gs.equipped_jacket != "" and shirt_tex != null:
-			# 外套格：画出当前穿的衣服颜色
-			draw_texture_rect(shirt_tex, Rect2(r.position + Vector2(1, 1), Vector2(EQUIP - 2, EQUIP - 2)),
-				false, _gs.jacket_color())
+		var worn_item := _equipped_item(EQUIP_SLOTS[i])
+		if not worn_item.is_empty():
+			var idx: int = ITEMS.find(worn_item)
+			if idx >= 0:
+				draw_texture_rect(_textures[idx],
+					Rect2(r.position + Vector2(1, 1), Vector2(EQUIP - 2, EQUIP - 2)),
+					false, worn_item.get("tint", Color(1, 1, 1)))
 			continue
 		# 空格子中间一个小横线，表示没装备
-		draw_line(r.position + Vector2(6, EQUIP * 0.5), r.position + Vector2(EQUIP - 6, EQUIP * 0.5),
+		draw_line(r.position + Vector2(5, EQUIP * 0.5), r.position + Vector2(EQUIP - 5, EQUIP * 0.5),
 			Color(1, 1, 1, 0.14), 1.0)
 
 	# 属性
@@ -334,22 +354,20 @@ func _draw() -> void:
 		var draw_size := Vector2(tex.get_width(), tex.get_height()) * fit
 		var tint: Color = data_item.get("tint", Color(1, 1, 1))
 		draw_texture_rect(tex, Rect2(r.position + (Vector2(SLOT, SLOT) - draw_size) * 0.5 + Vector2(0, -1), draw_size), false, tint)
-		# 可穿戴物不显示数量
-		if data_item.has("equip"):
-			continue
+		if data_item.has("slot"):
+			continue     # 可穿戴物不显示数量
 		var cnt := str(_count_of(index))
 		var cs := font.get_string_size(cnt, HORIZONTAL_ALIGNMENT_LEFT, -1, 6)
 		draw_string(font, Vector2(r.position.x + r.size.x - cs.x - 2.0, r.position.y + r.size.y - 2.0),
 			cnt, HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.98, 0.96, 0.86, 0.95))
 
-	var used := vis.size()
 	draw_string(font, Vector2(grid_box.position.x + 6.0, grid_box.position.y + grid_box.size.y - 5.0),
-		"%d / %d" % [used, total], HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.7, 0.75, 0.85, 0.85))
+		"%d / %d" % [vis.size(), total], HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.7, 0.75, 0.85, 0.85))
 
 	# ===== 右侧：物品详情 =====
 	draw_rect(DETAIL, Color(0.09, 0.10, 0.125, 1.0))
 	draw_rect(DETAIL, Color(1, 1, 1, 0.10), false, 1.0)
-	if _selected >= 0 and _selected < ITEMS.size() and _count_of(_selected) > 0:
+	if _selected >= 0 and _selected < ITEMS.size():
 		var data: Dictionary = ITEMS[_selected]
 		var tex: Texture2D = _textures[_selected]
 		var tint2: Color = data.get("tint", Color(1, 1, 1))
@@ -365,9 +383,8 @@ func _draw() -> void:
 		for i in lines.size():
 			draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + 40.0 + float(i) * 9.0),
 				lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.78, 0.82, 0.9, 0.9))
-		# 可穿戴物不显示数量，改成显示是否穿着
-		if data.has("equip"):
-			var worn_now: bool = _gs != null and _gs.equipped_jacket == data["equip"]
+		if data.has("slot"):
+			var worn_now: bool = _gs != null and _gs.equipped.get(data["slot"], "") == data["id"]
 			draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + DETAIL.size.y - 24.0),
 				"EQUIPPED" if worn_now else "NOT WORN", HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
 				Color(0.95, 0.9, 0.7, 0.95) if worn_now else Color(0.7, 0.74, 0.84, 0.9))
