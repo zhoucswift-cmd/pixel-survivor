@@ -61,7 +61,9 @@ func setup(map: Node2D, player: Node2D) -> void:
 func select(index: int) -> void:
 	if types.is_empty():
 		return
-	selected = clampi(index, 0, types.size() - 1)
+	index = clampi(index, 0, types.size() - 1)
+	# 再按一次同一个数字就取消选中
+	selected = -1 if index == selected else index
 	_update_ghost()
 	selection_changed.emit(selected)
 
