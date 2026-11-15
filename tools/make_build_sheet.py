@@ -21,11 +21,11 @@ SOURCE = ROOT / "assets" / "character.aseprite"
 UNARMED = ROOT / "assets" / "character_sheet_unarmed.png"
 OUTPUT = ROOT / "assets" / "character_sheet_build.png"
 
-PAPER = (232, 236, 244, 255)    # 白条纹
-PAPER_D = (40, 86, 160, 255)    # 蓝条纹
-PAPER_L = (150, 190, 235, 255)  # 高光
-WRENCH = (196, 202, 212, 255)
-WRENCH_D = (120, 126, 138, 255)
+PAPER = (206, 220, 240, 255)      # 抬头浅底
+PAPER_D = (28, 62, 122, 255)      # 蓝图纸底
+PAPER_L = (222, 232, 245, 255)    # 白色图线
+PA_GRID = (52, 96, 168, 255)      # 淡蓝网格
+PA_HEAD = (30, 70, 140, 255)      # 标题文字
 OUTLINE = (26, 22, 38, 255)
 
 
@@ -55,56 +55,60 @@ def put(px, x, y, color):
         px[int(x), int(y)] = color
 
 
-# 蓝图尺寸（横着的纸）
-PAPER_W, PAPER_H = 13, 7
+# 蓝图尺寸：像一张报纸（比人物躯干还宽一点）
+PAPER_W, PAPER_H = 16, 11
 
 
 def draw_blueprint(px, cx, cy, direction):
-    """横着的蓝白相间图纸：整张纸用蓝/白竖条纹，深色描边。"""
+    """一张摊开的蓝图：蓝纸 + 白色工程图线（边框、网格、矩形、圆、尺寸线）。"""
     cx, cy = int(round(cx)), int(round(cy))
     x0 = cx - PAPER_W // 2
     y0 = cy - PAPER_H // 2
 
+    # 纸边（深色描边）
     for x in range(PAPER_W):
         for y in range(PAPER_H):
-            edge = x in (0, PAPER_W - 1) or y in (0, PAPER_H - 1)
-            if edge:
+            if x in (0, PAPER_W - 1) or y in (0, PAPER_H - 1):
                 put(px, x0 + x, y0 + y, OUTLINE)
-            else:
-                # 蓝白相间：每 2 列换一次色
-                stripe = ((x - 1) // 2) % 2
-                put(px, x0 + x, y0 + y, PAPER_D if stripe == 0 else PAPER)
-    # 顶部一条高光，像纸卷起
+
+    # 蓝底
     for x in range(1, PAPER_W - 1):
-        put(px, x0 + x, y0 + 1, PAPER_L if x % 2 == 0 else PAPER)
+        for y in range(1, PAPER_H - 1):
+            put(px, x0 + x, y0 + y, PAPER_D)
 
+    # 抬头（浅蓝横条 + 标题线）
+    for x in range(1, PAPER_W - 1):
+        put(px, x0 + x, y0 + 1, PAPER)
+    for x in range(2, 9):
+        put(px, x0 + x, y0 + 2, PA_HEAD)
 
-def draw_wrench(px, cx, cy, direction):
-    """扳手：一根 2px 厚的杆 + 开口的 C 形头，指向外侧。"""
-    cx, cy = int(round(cx)), int(round(cy))
-    # 沿朝向的单位向量
-    dirs = {0: (0, 1), 1: (0, -1), 2: (-1, 0), 3: (1, 0)}
-    dx, dy = dirs[direction]
-    perp = (dy, dx) if dx == 0 else (-dy, dx)   # 垂直方向（用来画杆的厚度）
+    # 网格（淡蓝）
+    for y in range(4, PAPER_H - 2, 3):
+        for x in range(1, PAPER_W - 1):
+            put(px, x0 + x, y0 + y, PA_GRID)
+    for x in range(3, PAPER_W - 1, 5):
+        for y in range(4, PAPER_H - 2):
+            put(px, x0 + x, y0 + y, PA_GRID)
 
-    # 杆：从手往外 5 格，2px 厚
-    for i in range(6):
-        bx = cx + dx * i
-        by = cy + dy * i
-        put(px, bx, by, WRENCH)
-        put(px, bx + perp[0], by + perp[1], WRENCH_D)
+    # 图形 1：矩形平面图
+    for x in range(3, 9):
+        put(px, x0 + x, y0 + 5, PAPER_L)
+        put(px, x0 + x, y0 + 9, PAPER_L)
+    for y in range(5, 10):
+        put(px, x0 + 3, y0 + y, PAPER_L)
+        put(px, x0 + 8, y0 + y, PAPER_L)
 
-    # 头：在最外侧，C 形开口
-    hx = cx + dx * 6
-    hy = cy + dy * 6
-    for s in (-1, 0, 1):
-        put(px, hx + perp[0] * s, hy + perp[1] * s, WRENCH)
-    put(px, hx + dx * 1 + perp[0] * -1, hy + dy * 1 + perp[1] * -1, WRENCH)
-    put(px, hx + dx * 1 + perp[0] * 1, hy + dy * 1 + perp[1] * 1, WRENCH)
-    put(px, hx + dx, hy + dy, OUTLINE)
-    # 描边：杆两侧
-    for i in range(6):
-        put(px, cx + dx * i - perp[0], cy + dy * i - perp[1], OUTLINE)
+    # 图形 2：一个圆（俯视图）
+    for dx, dy in ((0, -2), (0, 2), (-2, 0), (2, 0), (-1, -1), (1, -1), (-1, 1), (1, 1)):
+        put(px, x0 + 13 + dx, y0 + 7 + dy, PAPER_L)
+    put(px, x0 + 13, y0 + 7, PAPER_L)
+
+    # 尺寸线 + 刻度
+    for x in range(3, 17):
+        put(px, x0 + x, y0 + 10, PAPER_L)
+    for x in (3, 9, 16):
+        put(px, x0 + x, y0 + 9, PAPER_L)
+        put(px, x0 + x, y0 + 11, PAPER_L)
 
 
 def dump_gun_frames(tmp: Path) -> None:
@@ -143,11 +147,16 @@ def main() -> None:
             else:
                 ox = 1
 
-            # 蓝图放两手中间，扳手在最外侧那只手
+            # 蓝图在两手中间稍微往上一点，然后把手画在纸上面，像双手捧着
             mid_x = sum(h[0] for h in hands) / len(hands)
             mid_y = sum(h[1] for h in hands) / len(hands)
-            draw_blueprint(px, mid_x + ox, mid_y + oy, direction)
-            draw_wrench(px, hands[-1][0] + ox, hands[-1][1] + oy, direction)
+            draw_blueprint(px, mid_x, mid_y + 2, direction)
+
+            gun_px = gun.load()
+            for yy in range(32):
+                for xx in range(32):
+                    if is_skin(gun_px[xx, yy]):
+                        px[xx, yy] = gun_px[xx, yy]
 
             out.paste(frame, (i * 32, 0))
 
