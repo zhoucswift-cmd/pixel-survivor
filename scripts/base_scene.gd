@@ -48,6 +48,9 @@ func _ready() -> void:
 
 
 func _on_build_mode_changed(active: bool) -> void:
+	# 躺着的时候按 Tab：先起床再进建造模式
+	if active and _sleeping_piece != null:
+		_wake_up()
 	_player.set_build_mode(active)
 
 
