@@ -188,17 +188,11 @@ func _set_overview(on: bool, animate := true) -> void:
 	if camera == null:
 		return
 
-	# 镜头边界：两套边界都包住平台中心，切换不会跳
-	if on:
-		camera.limit_left = BG_ORIGIN.x
-		camera.limit_top = BG_ORIGIN.y
-		camera.limit_right = BG_ORIGIN.x + BG_SIZE.x
-		camera.limit_bottom = BG_ORIGIN.y + BG_SIZE.y
-	else:
-		camera.limit_left = -118
-		camera.limit_top = 39
-		camera.limit_right = 598
-		camera.limit_bottom = 441
+	# 镜头边界 = 整张背景图，两种视角都别跑出图外
+	camera.limit_left = BG_ORIGIN.x
+	camera.limit_top = BG_ORIGIN.y
+	camera.limit_right = BG_ORIGIN.x + BG_SIZE.x
+	camera.limit_bottom = BG_ORIGIN.y + BG_SIZE.y
 
 	var view := get_viewport_rect().size
 	var target := minf(view.x / BG_SIZE.x, view.y / BG_SIZE.y) if on else 1.0
