@@ -571,6 +571,8 @@ after 3.5s-> 0 只（确认不再刷）
 - **基地里不能使用武器、手里也没有枪**：`player.set_armed(false)` 之后不能开枪、不能换弹、
   不跟鼠标瞄准，朝向跟着移动方向；身体换成**空手**那套帧（`character_sheet_unarmed.png`，
   身体 + 手、没有枪），就是普通走路动画。
+- **基地 HUD 很干净**：没有血条、没有弹药（基地里不打架），只保留底部建造栏和边缘的
+  `E - GO DOWNTOWN` 提示。
 - **按 Tab 进 / 出建造模式**：不按 Tab 时就是纯走路，底部只有一行 `TAB - BUILD` 提示；
   按 Tab 才弹出底部家具栏，此时才能选家具、放置、拆除、升级。
 - 家具数据是 `BaseFurniture` 资源（`assets/base/*.tres`）：名字、贴图、`max_level`。

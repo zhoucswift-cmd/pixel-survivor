@@ -5,7 +5,6 @@
 [ext_resource type="TileSet" path="res://assets/tiles/concrete_tileset.tres" id="3_tileset"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="4_player"]
 [ext_resource type="Script" path="res://scripts/base_builder.gd" id="5_builder"]
-[ext_resource type="Script" path="res://scripts/health_bar.gd" id="6_health"]
 [ext_resource type="Script" path="res://scripts/base_hud.gd" id="7_palette"]
 [ext_resource type="Texture2D" path="res://assets/base/city_background.png" id="8_city"]
 
@@ -33,36 +32,8 @@ script = ExtResource("5_builder")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
-[node name="Health" type="Control" parent="HUD"]
-offset_left = 8.0
-offset_top = 6.0
-offset_right = 80.0
-offset_bottom = 18.0
-script = ExtResource("6_health")
 
-[node name="HealthText" type="Label" parent="HUD"]
-offset_left = 84.0
-offset_top = 6.0
-offset_right = 160.0
-offset_bottom = 18.0
-theme_override_colors/font_color = Color(0.96, 0.9, 0.88, 0.95)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 7
-text = "100 / 100"
 
-[node name="Ammo" type="Label" parent="HUD"]
-offset_left = 132.0
-offset_top = 6.0
-offset_right = 240.0
-offset_bottom = 18.0
-theme_override_colors/font_color = Color(1, 0.9, 0.7, 0.95)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 7
-text = "7 / 7"
 
 [node name="Palette" type="Control" parent="HUD"]
 anchors_preset = 15

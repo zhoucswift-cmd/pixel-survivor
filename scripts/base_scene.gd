@@ -1,14 +1,16 @@
 extends Node2D
-## 基地场景：30x30 的楼顶水泥平台 + 建造系统 + HUD。
+## 基地场景：30x30 的楼顶水泥平台 + 建造系统。
+## 基地没有战斗，所以 HUD 不显示血条和弹药，只保留建造栏和边缘提示。
 
 @onready var _map: Node2D = $Map
 @onready var _player: CharacterBody2D = $Player
 @onready var _builder: Node2D = $Builder
-@onready var _health_bar: Control = $HUD/Health
-@onready var _health_text: Label = $HUD/HealthText
-@onready var _ammo_label: Label = $HUD/Ammo
 @onready var _palette: Control = $HUD/Palette
 @onready var _travel_label: Label = $HUD/Travel
+
+## 离女儿墙多少格之内算“到边上了”
+const EDGE_MARGIN := 2
+const BOARD := 30
 
 
 func _ready() -> void:
@@ -25,21 +27,11 @@ func _ready() -> void:
 	camera.limit_right = 640
 	camera.limit_bottom = 640
 
-	# 基地里不能用武器：不能开枪、朝向跟移动、只播走路动画
+	# 基地里不能使用武器：不能开枪、朝向跟移动、手里也没有枪
 	_player.set_armed(false)
-
-	_player.health_changed.connect(_on_health_changed)
-	_player.ammo_changed.connect(_on_ammo_changed)
-	_on_health_changed(_player.health, _player.max_health)
-	_on_ammo_changed(_player.ammo, _player.weapon.magazine)
 
 	_builder.setup(_map, _player)
 	_palette.setup(_builder)
-
-
-## 离女儿墙多少格之内算“到边上了”
-const EDGE_MARGIN := 2
-const BOARD := 30
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -59,16 +51,6 @@ func at_edge() -> bool:
 
 
 func _process(_delta: float) -> void:
-	_ammo_label.text = _player.ammo_display()
 	var edge := at_edge()
 	_travel_label.visible = edge
 	_travel_label.text = "E - GO DOWNTOWN" if edge else ""
-
-
-func _on_health_changed(current: float, maximum: float) -> void:
-	_health_bar.set_health(current, maximum)
-	_health_text.text = "%d / %d" % [roundi(current), roundi(maximum)]
-
-
-func _on_ammo_changed(current: int, maximum: int) -> void:
-	_ammo_label.text = "%d / %d" % [current, maximum]
