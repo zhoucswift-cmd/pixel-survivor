@@ -11,5 +11,5 @@ short_name = "BED"
 texture = ExtResource("2_tex")
 occupied_texture = ExtResource("3_occ")
 occupied_frames = 2
-footprint = Vector2i(2, 3)
+footprint = Vector2i(1, 2)
 max_level = 3

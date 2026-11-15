@@ -107,7 +107,7 @@ C:\game\test
 │   ├─ make_workbench.lua     生成工作台（32×16）
 │   ├─ make_hydrant.lua       生成消防栓（16×16）
 │   ├─ make_water.lua         生成水花 + 水洼动画帧
-│   ├─ make_bed.lua           生成床（32×48）
+│   ├─ make_bed.lua           生成床（16×32）
 │   ├─ make_stairs.lua        生成楼梯（48×80，3×5 格）
 │   ├─ make_base_map.py       生成基地 TileSet + base.tsx/base.tmj
 │   ├─ make_hud.lua           生成血条外框与填充图
@@ -596,7 +596,7 @@ after 3.5s-> 0 只（确认不再刷）
 - **按 Tab 进 / 出建造模式**：不按 Tab 时就是纯走路，底部只有一行 `TAB - BUILD` 提示；
   按 Tab 才弹出底部家具栏，此时才能选家具、放置、拆除、升级。
 - 家具数据是 `BaseFurniture` 资源（`assets/base/*.tres`）：名字、贴图、`footprint`（占地几格）、`max_level`。
-  目前两件：**床（2×3，可升到 3 级）** 和 **工作台（2×1，1 级）**。
+  目前两件：**床（1×2，可升到 3 级）** 和 **工作台（2×1，1 级）**。
 - 多格占地是通用的：`cells_for()` 把占地展开成格子列表，放/拆/预览/占位判断都按整块算，
   1×2 的床会同时占住上下两格，和别的家具重叠会被拒绝。
 - **右侧的楼梯**：`scenes/base.tscn` 里的 `Stairs` 节点（48×80，占 26..28 × 21..25 格）——
