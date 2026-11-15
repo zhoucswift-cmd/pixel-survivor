@@ -147,6 +147,18 @@ func _bed_type() -> BaseFurniture:
 	return _builder.types[0]
 
 
+## 每种台子的提示文案
+func _craft_label(cat: String) -> String:
+	match cat:
+		"tools":
+			return "CRAFT TOOLS & WEAPON"
+		"clothing":
+			return "CRAFT CLOTHING"
+		"carpentry":
+			return "CRAFT CARPENTRY"
+	return "CRAFT"
+
+
 ## 玩家旁边的工作台（没有就返回 null）
 func _bench_near_player() -> Node2D:
 	for piece: Node2D in _builder.all_pieces():
@@ -215,10 +227,11 @@ func _process(_delta: float) -> void:
 		_travel.text = "E - SLEEP"
 		return
 
-	# 站在工作台旁边：提示造东西
-	if _bench_near_player() != null:
+	# 站在工作台旁边：提示造东西（按台子写清楚是哪一种）
+	var bench_now := _bench_near_player()
+	if bench_now != null:
 		_travel.visible = true
-		_travel.text = "E - CRAFT"
+		_travel.text = "E - " + _craft_label(bench_now.data.craft_category)
 		return
 
 	# 站进楼梯里才提示按 E 下楼
