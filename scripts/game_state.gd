@@ -32,6 +32,8 @@ func reset_items() -> void:
 	rope = 0
 
 
-## 当前衣服的颜色
+## 当前衣服的颜色；没穿就返回透明（角色用默认贴图）
 func jacket_color() -> Color:
+	if equipped_jacket == "":
+		return Color(0, 0, 0, 0)
 	return JACKET_COLORS.get(equipped_jacket, JACKET_COLORS["blue"])

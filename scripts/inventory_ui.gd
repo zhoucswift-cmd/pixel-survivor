@@ -147,6 +147,27 @@ func _visible_indices() -> Array:
 	return out
 
 
+## 把当前穿着的衣服刷到玩家身上
+func _apply_look() -> void:
+	var p = get_tree().current_scene.get_node_or_null("Player") if get_tree().current_scene != null else null
+	if p != null and p.has_method("apply_look"):
+		p.apply_look(_gs.jacket_color() if _gs != null else Color(0, 0, 0, 0))
+	_refresh_stats()
+
+
+## 脱下衣服，放回背包
+func _unequip_if_clicked(pos: Vector2) -> bool:
+	if _gs == null or _gs.equipped_jacket == "":
+		return false
+	if not _equip_rect(1).has_point(pos):
+		return false
+	_gs.equipped_jacket = ""
+	_selected = -1
+	_apply_look()
+	queue_redraw()
+	return true
+
+
 ## 点物品：能穿的直接穿上，角色外观立刻变
 func _try_equip(index: int) -> void:
 	if index < 0 or index >= ITEMS.size():
@@ -156,10 +177,7 @@ func _try_equip(index: int) -> void:
 		return
 	if _gs != null:
 		_gs.equipped_jacket = data["equip"]
-	var p = get_tree().current_scene.get_node_or_null("Player") if get_tree().current_scene != null else null
-	if p != null and p.has_method("apply_look"):
-		p.apply_look(_gs.jacket_color() if _gs != null else Color(0, 0, 0, 0))
-	_refresh_stats()
+	_apply_look()
 
 
 func _count_of(index: int) -> int:
@@ -179,6 +197,10 @@ func _input(event: InputEvent) -> void:
 	var vis := _visible_indices()
 	if event is InputEventMouseButton and event.pressed \
 		and event.button_index == MOUSE_BUTTON_LEFT:
+		# 点左侧装备格：把衣服脱回背包
+		if _unequip_if_clicked(event.position):
+			get_viewport().set_input_as_handled()
+			return
 		for slot in vis.size():
 			if _slot_rect(slot).has_point(event.position):
 				_selected = vis[slot]
@@ -259,7 +281,7 @@ func _draw() -> void:
 		var r := _equip_rect(i)
 		draw_rect(r, Color(0.16, 0.17, 0.21, 1.0))
 		draw_rect(r, Color(1, 1, 1, 0.10), false, 1.0)
-		if i == 1 and _gs != null and shirt_tex != null:
+		if i == 1 and _gs != null and _gs.equipped_jacket != "" and shirt_tex != null:
 			# 外套格：画出当前穿的衣服颜色
 			draw_texture_rect(shirt_tex, Rect2(r.position + Vector2(1, 1), Vector2(EQUIP - 2, EQUIP - 2)),
 				false, _gs.jacket_color())
