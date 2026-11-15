@@ -124,6 +124,10 @@ def main() -> None:
             else:
                 ox = 1
 
+            # 面朝上（背对镜头）时蓝图抱在身前，被身体挡住，看不到
+            if direction == 1:
+                continue
+
             # 蓝图在身前，双手按在图纸左右两边
             mid_x = sum(h[0] for h in hands) / len(hands)
             mid_y = sum(h[1] for h in hands) / len(hands)
