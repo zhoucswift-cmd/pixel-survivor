@@ -31,7 +31,8 @@ func _initialize() -> void:
 	print("玩家出生  -> (%.0f, %.0f)" % [player.position.x, player.position.y])
 	print("家具种类  -> %s" % str(builder.types.map(func(t): return t.short_name)))
 
-	print("放置(10,10)   -> %s" % str(builder.place(Vector2i(10, 10))))
+	print("库存          -> %d" % builder.stock_of(0))
+	print("放置(10,10)   -> %s，库存 %d" % [str(builder.place(Vector2i(10, 10))), builder.stock_of(0)])
 	print("重复放置      -> %s（应 false）" % str(builder.place(Vector2i(10, 10))))
 	print("设备瓦片上    -> %s（应 false）" % str(builder.place(Vector2i(6, 25))))
 	print("墙外          -> %s（应 false）" % str(builder.place(Vector2i(0, 5))))
@@ -40,8 +41,13 @@ func _initialize() -> void:
 	print("再次升级      -> %s，等级 %d" % [
 		str(builder.upgrade(Vector2i(10, 10))), builder.piece_at(Vector2i(10, 10)).level])
 	print("满级后升级    -> %s（应 false）" % str(builder.upgrade(Vector2i(10, 10))))
-	print("拆除          -> %s，剩余 %d" % [
-		str(builder.remove(Vector2i(10, 10))), builder.piece_count()])
+	builder.rotate_at(Vector2i(10, 10), 1)
+	print("旋转 90°      -> steps=%d，占格 (10,11)=%s (11,10)=%s" % [
+		builder.piece_at(Vector2i(10, 10)).steps,
+		str(builder.piece_at(Vector2i(10, 11)) != null),
+		str(builder.piece_at(Vector2i(11, 10)) != null)])
+	print("回收          -> %s，库存 %d，剩余 %d" % [
+		str(builder.recycle(Vector2i(10, 10))), builder.stock_of(0), builder.piece_count()])
 	print("存档文件      -> %s" % str(FileAccess.file_exists("user://base_layout.json")))
 
 	quit()

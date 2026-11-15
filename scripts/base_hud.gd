@@ -78,14 +78,14 @@ func _draw() -> void:
 
 	# 当前选中 + 操作提示
 	var data_sel: BaseFurniture = _builder.selected_type()
-	var name_text: String = "-" if data_sel == null else data_sel.short_name
+	var name_text: String = "-" if data_sel == null else "%s  x%d" % [data_sel.short_name, _builder.stock_of(_selected)]
 	var level_text := ""
 	var hovered: Node2D = _builder.piece_at(_builder.mouse_cell())
 	if hovered != null:
 		level_text = "  LV%d/%d" % [hovered.level, hovered.data.max_level]
 	draw_string(font, Vector2(x + 6.0, y + 9.0), name_text + level_text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.95, 0.95, 0.9, 0.95))
-	var hint := "LMB BUILD   RMB REMOVE   U UPGRADE   DEL CLEAR"
+	var hint := "LMB BUILD/DRAG   RMB RECYCLE   WHEEL ROTATE   U UPGRADE   DEL CLEAR"
 	if types.size() > 1:
 		hint = "1-%d SELECT   " % types.size() + hint
 	draw_string(font, Vector2(8.0, y + 33.0), hint,
