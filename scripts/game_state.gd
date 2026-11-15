@@ -20,9 +20,10 @@ var owned := {}
 
 ## 可穿戴物品的颜色（换装时就按这个颜色刷角色贴图）
 const ITEM_COLORS := {
-	"shirt_green": Color8(74, 150, 88),
-	"pants_dark": Color8(54, 60, 82),
-	"boots_brown": Color8(112, 74, 46),
+	"cloth_hat": Color8(198, 176, 128),
+	"tshirt": Color8(110, 160, 210),
+	"casual_pants": Color8(84, 92, 116),
+	"casual_shoes": Color8(126, 84, 52),
 }
 
 

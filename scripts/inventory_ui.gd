@@ -14,19 +14,24 @@ const ITEMS := [
 		"desc": ["Coiled hemp rope.", "Used for crafting", "and repairs."],
 	},
 	{
-		"id": "shirt_green", "name": "GREEN SHIRT", "type": "EQUIP", "slot": "jacket",
-		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(74, 150, 88),
-		"desc": ["A grass-stained shirt.", "Click to wear it."],
+		"id": "cloth_hat", "name": "CLOTH HAT", "type": "EQUIP", "slot": "hat",
+		"tex": "res://assets/base/icon_hat.png", "tint": Color8(198, 176, 128),
+		"desc": ["A simple cloth cap.", "Click to wear it."],
 	},
 	{
-		"id": "pants_dark", "name": "DARK PANTS", "type": "EQUIP", "slot": "pants",
-		"tex": "res://assets/base/icon_pants.png", "tint": Color8(54, 60, 82),
-		"desc": ["Rugged work pants.", "Click to wear them."],
+		"id": "tshirt", "name": "T-SHIRT", "type": "EQUIP", "slot": "jacket",
+		"tex": "res://assets/base/icon_shirt.png", "tint": Color8(110, 160, 210),
+		"desc": ["A plain t-shirt.", "Click to wear it."],
 	},
 	{
-		"id": "boots_brown", "name": "BROWN BOOTS", "type": "EQUIP", "slot": "boots",
-		"tex": "res://assets/base/icon_boots.png", "tint": Color8(112, 74, 46),
-		"desc": ["Sturdy leather boots.", "Click to wear them."],
+		"id": "casual_pants", "name": "CASUAL PANTS", "type": "EQUIP", "slot": "pants",
+		"tex": "res://assets/base/icon_pants.png", "tint": Color8(84, 92, 116),
+		"desc": ["Comfortable pants.", "Click to wear them."],
+	},
+	{
+		"id": "casual_shoes", "name": "CASUAL SHOES", "type": "EQUIP", "slot": "boots",
+		"tex": "res://assets/base/icon_boots.png", "tint": Color8(126, 84, 52),
+		"desc": ["Light everyday shoes.", "Click to wear them."],
 	},
 ]
 

@@ -43,6 +43,9 @@ const BOOT_MID := Color8(92, 60, 38)
 const BOOT_DARK := Color8(68, 44, 28)
 ## 腰带（没穿衣服时变成内裤的松紧带）
 const BELT := Color8(202, 162, 62)
+## 头发（戴帽子时换成帽子的颜色）
+const HAIR := Color8(92, 58, 38)
+const HAIR_L := Color8(126, 84, 56)
 const WALK_FPS := 10.0
 const SHOOT_FPS := 12.0
 const DIRS := {"down": 0, "up": 7, "left": 14, "right": 21}
@@ -669,6 +672,12 @@ func _recolor_texture(texture: Texture2D) -> Texture2D:
 		table[_color_key(PANTS_MID)] = _rgb(BRIEF)
 		table[_color_key(PANTS_DARK)] = _rgb(BRIEF_DARK)
 		table[_color_key(BELT)] = _rgb(BRIEF)
+
+	# 帽子：戴了就盖住头发颜色
+	var hat := _slot_color("hat")
+	if hat.a > 0.0:
+		table[_color_key(HAIR)] = _rgb(hat.darkened(0.18))
+		table[_color_key(HAIR_L)] = _rgb(hat.lightened(0.18))
 
 	# 鞋子：穿了就染色，没穿就是光脚
 	if boots.a > 0.0:

@@ -90,3 +90,15 @@ fill(boots, 4, 13, 12, 13, SHADE2)
 fill(boots, 10, 10, 12, 12, SHADE)
 outline(boots)
 save(boots, "C:/game/test/assets/base/icon_boots.aseprite")
+
+-- ===== 帽子 =====
+local hat = new_image()
+fill(hat, 3, 5, 12, 10, WHITE)       -- 帽身
+fill(hat, 2, 9, 13, 11, WHITE)      -- 帽檐
+fill(hat, 3, 5, 12, 5, SHADE)
+fill(hat, 3, 5, 3, 10, SHADE)
+fill(hat, 2, 11, 13, 11, SHADE2)
+fill(hat, 10, 6, 12, 9, SHADE2)
+fill(hat, 4, 6, 4, 9, SHADE)
+outline(hat)
+save(hat, "C:/game/test/assets/base/icon_hat.aseprite")

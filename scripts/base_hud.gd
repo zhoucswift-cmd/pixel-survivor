@@ -13,9 +13,10 @@ const FOOTER_H := 26.0
 const RECIPES := {
 	"tools": [],
 	"clothing": [
-		{"out": "shirt_green", "name": "GREEN SHIRT", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(74, 150, 88), "cost": {"cloth": 1}},
-		{"out": "pants_dark", "name": "DARK PANTS", "tex": "res://assets/base/icon_pants.png", "tint": Color8(54, 60, 82), "cost": {"cloth": 2}},
-		{"out": "boots_brown", "name": "BROWN BOOTS", "tex": "res://assets/base/icon_boots.png", "tint": Color8(112, 74, 46), "cost": {"rope": 2}},
+		{"out": "cloth_hat", "name": "CLOTH HAT", "tex": "res://assets/base/icon_hat.png", "tint": Color8(198, 176, 128), "cost": {"cloth": 2, "rope": 1}},
+		{"out": "tshirt", "name": "T-SHIRT", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(110, 160, 210), "cost": {"cloth": 7, "rope": 2}},
+		{"out": "casual_pants", "name": "CASUAL PANTS", "tex": "res://assets/base/icon_pants.png", "tint": Color8(84, 92, 116), "cost": {"cloth": 4, "rope": 1}},
+		{"out": "casual_shoes", "name": "CASUAL SHOES", "tex": "res://assets/base/icon_boots.png", "tint": Color8(126, 84, 52), "cost": {"cloth": 5, "rope": 3}},
 	],
 	"carpentry": [
 		{"out": "bed", "name": "BED", "tex": "res://assets/base/bed.png", "cost": {"cloth": 2, "rope": 1}},
