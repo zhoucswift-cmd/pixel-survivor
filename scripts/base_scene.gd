@@ -18,9 +18,12 @@ func _ready() -> void:
 
 	# 基地是 30x30 格 = 480x480：放宽玩家活动范围和相机限制
 	_player.bounds = Rect2(24, 24, 432, 432)
+	# 相机可以多看平台外 160px，走到边上就能看到楼下的城市
 	var camera: Camera2D = _player.get_node("Camera2D")
-	camera.limit_right = 480
-	camera.limit_bottom = 480
+	camera.limit_left = -160
+	camera.limit_top = -160
+	camera.limit_right = 640
+	camera.limit_bottom = 640
 
 	_player.health_changed.connect(_on_health_changed)
 	_player.ammo_changed.connect(_on_ammo_changed)

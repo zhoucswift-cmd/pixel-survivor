@@ -553,10 +553,15 @@ after 3.5s-> 0 只（确认不再刷）
 
 ![整张平台](docs/base_platform.png)
 - 加载方式和草地一样：`meadow.gd` 读 `.tmj` 填 `TileMapLayer`，**Tiled 改完直接生效**。
+- **外围城市**：平台四周有一圈 800×800 的城市背景（`assets/base/city_background.png`，
+  由 `tools/make_city.lua` 生成）——低矮楼房群、屋顶上的空调/水箱/太阳能板/小花园、
+  4 处**起火冒烟**的楼、街上**成群的僵尸**、路灯光斑，外加平台投在城市地面上的阴影。
+  相机边界外扩了 160px，走到平台边就能看到楼下的城市。
+
+![平台边看城市](docs/screenshots/base_edge.png)
+
 - **进出**：走到平台边缘（离女儿墙 2 格内）会浮出提示 `E - GO DOWNTOWN`，按 **E** 去草地；
   草地那边走到地图边缘会提示 `E - BACK TO BASE`，按 **E** 回基地。`B` 是不用走路的快捷键。
-
-![走到平台边缘](docs/screenshots/base_edge.png)
 
 ### 建造 / 摆放家具
 
