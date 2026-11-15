@@ -336,35 +336,33 @@ func _process(_delta: float) -> void:
 	if _ghost == null:
 		return
 
+	# 拖动优先：不管有没有选中家具，拖着的那件都要实时跟鼠标
+	if _dragging != null:
+		_ghost.visible = false
+		var data: BaseFurniture = _dragging.data
+		var steps: int = int(_dragging.steps)
+		_dragging.position = get_global_mouse_position()
+		var ok := can_place(_mouse_cell(), types.find(data), steps)
+		_dragging.modulate = Color(1, 1, 1, 0.78) if ok else Color(1, 0.5, 0.48, 0.62)
+		return
+
 	if not build_mode or selected_type() == null:
 		_ghost.visible = false
-		if _dragging != null:
-			return
 		return
 
 	var cell := _mouse_cell()
-
-	if _dragging != null:
-		# 拖着家具走：家具自己跟着鼠标，预览藏起来
-		_ghost.visible = false
-		var fp := rotated_footprint(_dragging.data, int(_dragging.steps))
-		_dragging.position = Vector2(cell) * TILE + Vector2(fp) * TILE * 0.5
-		_dragging.modulate = Color(1, 1, 1, 0.75) if can_place(cell, types.find(_dragging.data), int(_dragging.steps)) \
-			else Color(1, 0.5, 0.48, 0.6)
-		return
-
-	var data := selected_type()
+	var data_sel := selected_type()
 
 	# 整块占地都要在平台范围内，否则不显示预览
 	var inside := true
-	for c in cells_for(cell, data, _placing_steps):
+	for c in cells_for(cell, data_sel, _placing_steps):
 		if c.x < 0 or c.y < 0 or c.x >= _board.x or c.y >= _board.y:
 			inside = false
 	_ghost.visible = inside
 	if not inside:
 		return
 
-	var fp := rotated_footprint(data, _placing_steps)
+	var fp := rotated_footprint(data_sel, _placing_steps)
 	_ghost.position = Vector2(cell) * TILE + Vector2(fp) * TILE * 0.5
 	_ghost.rotation = _placing_steps * PI * 0.5
 	var free := can_place(cell) and stock_of(selected) > 0

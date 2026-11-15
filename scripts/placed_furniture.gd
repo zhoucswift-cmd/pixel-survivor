@@ -49,6 +49,11 @@ func _footprint() -> Vector2i:
 ## 拖动中：半透明、亮一点，方便看落点
 func set_dragging(value: bool) -> void:
 	_dragging = value
+	# 拖动时先关掉碰撞，松手再打开
+	if _body != null:
+		for child in _body.get_children():
+			if child is CollisionShape2D:
+				child.set_deferred("disabled", value)
 	_apply_tint()
 
 
