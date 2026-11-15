@@ -131,6 +131,21 @@ func _equip_rect(index: int) -> Rect2:
 	return Rect2(78, 36 + float(index - 4) * (EQUIP + 3.0), EQUIP, EQUIP)
 
 
+## 背包格子里应该显示的物品（穿在身上的衣服不显示，可穿戴物不显示数量）
+func _visible_indices() -> Array:
+	var out := []
+	for i in ITEMS.size():
+		var data: Dictionary = ITEMS[i]
+		if data.has("equip"):
+			# 可穿戴：没穿在身上才在包里
+			var worn: bool = _gs != null and _gs.equipped_jacket == data["equip"]
+			if not worn:
+				out.append(i)
+		elif _count_of(i) > 0:
+			out.append(i)
+	return out
+
+
 ## 点物品：能穿的直接穿上，角色外观立刻变
 func _try_equip(index: int) -> void:
 	if index < 0 or index >= ITEMS.size():
@@ -160,19 +175,20 @@ func _count_of(index: int) -> int:
 func _input(event: InputEvent) -> void:
 	if not _open:
 		return
+	var vis := _visible_indices()
 	if event is InputEventMouseMotion:
-		for i in ITEMS.size():
-			if _slot_rect(i).has_point(event.position):
-				if _selected != i:
-					_selected = i
+		for slot in vis.size():
+			if _slot_rect(slot).has_point(event.position):
+				if _selected != vis[slot]:
+					_selected = vis[slot]
 					queue_redraw()
 				break
 	elif event is InputEventMouseButton and event.pressed \
 		and event.button_index == MOUSE_BUTTON_LEFT:
-		for i in ITEMS.size():
-			if _slot_rect(i).has_point(event.position):
-				_selected = i
-				_try_equip(i)
+		for slot in vis.size():
+			if _slot_rect(slot).has_point(event.position):
+				_selected = vis[slot]
+				_try_equip(_selected)
 				queue_redraw()
 				get_viewport().set_input_as_handled()
 				return
@@ -270,29 +286,31 @@ func _draw() -> void:
 	draw_rect(grid_box, Color(1, 1, 1, 0.08), false, 1.0)
 
 	var total := GRID_COLS * GRID_ROWS
-	for i in total:
-		var r := _slot_rect(i)
-		var has_item := i < ITEMS.size() and _count_of(i) > 0
-		var is_sel := i == _selected and has_item
+	var vis := _visible_indices()
+	for slot in total:
+		var r := _slot_rect(slot)
+		var index: int = vis[slot] if slot < vis.size() else -1
+		var is_sel := index >= 0 and index == _selected
 		draw_rect(r, Color(0.12, 0.13, 0.16, 1.0))
 		draw_rect(r, Color(0.95, 0.78, 0.35, 0.95) if is_sel else Color(1, 1, 1, 0.09), false, 1.0)
-		if not has_item:
+		if index < 0:
 			continue
-		var tex: Texture2D = _textures[i]
+		var data_item: Dictionary = ITEMS[index]
+		var tex: Texture2D = _textures[index]
 		var box := Vector2(SLOT - 6.0, SLOT - 6.0)
 		var fit := minf(box.x / tex.get_width(), box.y / tex.get_height())
 		var draw_size := Vector2(tex.get_width(), tex.get_height()) * fit
-		var tint: Color = ITEMS[i].get("tint", Color(1, 1, 1))
+		var tint: Color = data_item.get("tint", Color(1, 1, 1))
 		draw_texture_rect(tex, Rect2(r.position + (Vector2(SLOT, SLOT) - draw_size) * 0.5 + Vector2(0, -1), draw_size), false, tint)
-		var cnt := str(_count_of(i))
+		# 可穿戴物不显示数量
+		if data_item.has("equip"):
+			continue
+		var cnt := str(_count_of(index))
 		var cs := font.get_string_size(cnt, HORIZONTAL_ALIGNMENT_LEFT, -1, 6)
 		draw_string(font, Vector2(r.position.x + r.size.x - cs.x - 2.0, r.position.y + r.size.y - 2.0),
 			cnt, HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.98, 0.96, 0.86, 0.95))
 
-	var used := 0
-	for i in ITEMS.size():
-		if _count_of(i) > 0:
-			used += 1
+	var used := vis.size()
 	draw_string(font, Vector2(grid_box.position.x + 6.0, grid_box.position.y + grid_box.size.y - 5.0),
 		"%d / %d" % [used, total], HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.7, 0.75, 0.85, 0.85))
 
@@ -315,9 +333,16 @@ func _draw() -> void:
 		for i in lines.size():
 			draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + 40.0 + float(i) * 9.0),
 				lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.78, 0.82, 0.9, 0.9))
-		draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + DETAIL.size.y - 24.0),
-			"QTY  %d" % _count_of(_selected), HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
-			Color(0.95, 0.9, 0.7, 0.95))
+		# 可穿戴物不显示数量，改成显示是否穿着
+		if data.has("equip"):
+			var worn_now: bool = _gs != null and _gs.equipped_jacket == data["equip"]
+			draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + DETAIL.size.y - 24.0),
+				"EQUIPPED" if worn_now else "NOT WORN", HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
+				Color(0.95, 0.9, 0.7, 0.95) if worn_now else Color(0.7, 0.74, 0.84, 0.9))
+		else:
+			draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + DETAIL.size.y - 24.0),
+				"QTY  %d" % _count_of(_selected), HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
+				Color(0.95, 0.9, 0.7, 0.95))
 	else:
 		draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + 12.0),
 			"EMPTY", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.58, 0.62, 0.7, 0.8))
