@@ -92,11 +92,6 @@ func _draw() -> void:
 		Color(1, 1, 1, 0.12), 1.0)
 	draw_string(font, Vector2(panel.position.x + 5.0, panel.position.y + 10.0), "BUILD",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.95, 0.93, 0.85, 0.95))
-	var count_text := "%d PLACED" % _builder.piece_count()
-	var count_size := font.get_string_size(count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 6)
-	draw_string(font, Vector2(panel.position.x + panel.size.x - count_size.x - 5.0,
-		panel.position.y + 10.0), count_text,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.75, 0.8, 0.9, 0.7))
 
 	# ===== 物品列表 =====
 	var types: Array = _builder.types
@@ -147,15 +142,12 @@ func _draw() -> void:
 		draw_string(font, Vector2(row.position.x + row.size.x - 30.0, row.position.y + 21.0), lv,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(1.0, 0.9, 0.55, 0.95))
 
-	# ===== 面板底部：操作提示 =====
-	var footer_y := panel.position.y + panel.size.y - FOOTER_H
-	draw_line(Vector2(panel.position.x, footer_y), Vector2(panel.position.x + panel.size.x, footer_y),
-		Color(1, 1, 1, 0.10), 1.0)
+	# ===== 操作提示：放在左下角的空白处 =====
 	var lines := [
 		"LMB BUILD / DRAG",
 		"RMB CANCEL / RECYCLE",
 		"R ROTATE   U UPGRADE   DEL CLEAR",
 	]
 	for i in lines.size():
-		draw_string(font, Vector2(panel.position.x + 5.0, footer_y + 8.0 + float(i) * 8.0), lines[i],
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.72, 0.78, 0.9, 0.85))
+		draw_string(font, Vector2(6.0, screen.y - 22.0 + float(i) * 8.0), lines[i],
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.78, 0.84, 0.95, 0.9))
