@@ -13,6 +13,24 @@ const ITEMS := [
 		"tex": "res://assets/base/rope.png",
 		"desc": ["Coiled hemp rope.", "Used for crafting", "and repairs."],
 	},
+	{
+		"id": "shirt_blue", "name": "BLUE SHIRT", "type": "EQUIP",
+		"tex": "res://assets/base/shirt.png", "tint": Color8(63, 111, 181),
+		"equip": "blue", "own": true,
+		"desc": ["A worn blue shirt.", "Click to wear it."],
+	},
+	{
+		"id": "shirt_red", "name": "RED SHIRT", "type": "EQUIP",
+		"tex": "res://assets/base/shirt.png", "tint": Color8(181, 63, 63),
+		"equip": "red", "own": true,
+		"desc": ["A faded red shirt.", "Click to wear it."],
+	},
+	{
+		"id": "shirt_green", "name": "GREEN SHIRT", "type": "EQUIP",
+		"tex": "res://assets/base/shirt.png", "tint": Color8(74, 150, 88),
+		"equip": "green", "own": true,
+		"desc": ["A grass-stained shirt.", "Click to wear it."],
+	},
 ]
 
 const PANEL := Rect2(4, 5, 312, 170)
@@ -113,10 +131,30 @@ func _equip_rect(index: int) -> Rect2:
 	return Rect2(78, 36 + float(index - 4) * (EQUIP + 3.0), EQUIP, EQUIP)
 
 
+## 点物品：能穿的直接穿上，角色外观立刻变
+func _try_equip(index: int) -> void:
+	if index < 0 or index >= ITEMS.size():
+		return
+	var data: Dictionary = ITEMS[index]
+	if not data.has("equip"):
+		return
+	if _gs != null:
+		_gs.equipped_jacket = data["equip"]
+	var p = get_tree().current_scene.get_node_or_null("Player") if get_tree().current_scene != null else null
+	if p != null and p.has_method("apply_look"):
+		p.apply_look(_gs.jacket_color() if _gs != null else Color(0, 0, 0, 0))
+	_refresh_stats()
+
+
 func _count_of(index: int) -> int:
-	if _gs == null or index < 0 or index >= ITEMS.size():
+	if index < 0 or index >= ITEMS.size():
 		return 0
-	return int(_gs.get(ITEMS[index]["id"]))
+	var data: Dictionary = ITEMS[index]
+	if data.has("own"):
+		return 1
+	if _gs == null:
+		return 0
+	return int(_gs.get(data["id"]))
 
 
 func _input(event: InputEvent) -> void:
@@ -134,6 +172,7 @@ func _input(event: InputEvent) -> void:
 		for i in ITEMS.size():
 			if _slot_rect(i).has_point(event.position):
 				_selected = i
+				_try_equip(i)
 				queue_redraw()
 				get_viewport().set_input_as_handled()
 				return
@@ -181,15 +220,24 @@ func _draw() -> void:
 	# 人物框
 	draw_rect(CHAR_BOX, Color(0.14, 0.15, 0.18, 1.0))
 	draw_rect(CHAR_BOX, Color(1, 1, 1, 0.10), false, 1.0)
-	if _sheet != null:
-		draw_texture_rect_region(_sheet, Rect2(CHAR_BOX.position + Vector2(3, 4), Vector2(32, 32)),
+	var preview_sheet: Texture2D = _sheet
+	if _player != null and _player.get("look_sheet") != null:
+		preview_sheet = _player.look_sheet
+	if preview_sheet != null:
+		draw_texture_rect_region(preview_sheet, Rect2(CHAR_BOX.position + Vector2(3, 4), Vector2(32, 32)),
 			Rect2(0, 0, 32, 32))
 
 	# 装备格（左 4：帽子/外套/裤子/鞋；右 3：武器/背包/饰品）
+	var shirt_tex: Texture2D = _textures[3]     # ITEMS 里第一件 shirt
 	for i in 7:
 		var r := _equip_rect(i)
 		draw_rect(r, Color(0.16, 0.17, 0.21, 1.0))
 		draw_rect(r, Color(1, 1, 1, 0.10), false, 1.0)
+		if i == 1 and _gs != null and shirt_tex != null:
+			# 外套格：画出当前穿的衣服颜色
+			draw_texture_rect(shirt_tex, Rect2(r.position + Vector2(1, 1), Vector2(EQUIP - 2, EQUIP - 2)),
+				false, _gs.jacket_color())
+			continue
 		# 空格子中间一个小横线，表示没装备
 		draw_line(r.position + Vector2(6, EQUIP * 0.5), r.position + Vector2(EQUIP - 6, EQUIP * 0.5),
 			Color(1, 1, 1, 0.14), 1.0)
@@ -234,7 +282,8 @@ func _draw() -> void:
 		var box := Vector2(SLOT - 6.0, SLOT - 6.0)
 		var fit := minf(box.x / tex.get_width(), box.y / tex.get_height())
 		var draw_size := Vector2(tex.get_width(), tex.get_height()) * fit
-		draw_texture_rect(tex, Rect2(r.position + (Vector2(SLOT, SLOT) - draw_size) * 0.5 + Vector2(0, -1), draw_size), false)
+		var tint: Color = ITEMS[i].get("tint", Color(1, 1, 1))
+		draw_texture_rect(tex, Rect2(r.position + (Vector2(SLOT, SLOT) - draw_size) * 0.5 + Vector2(0, -1), draw_size), false, tint)
 		var cnt := str(_count_of(i))
 		var cs := font.get_string_size(cnt, HORIZONTAL_ALIGNMENT_LEFT, -1, 6)
 		draw_string(font, Vector2(r.position.x + r.size.x - cs.x - 2.0, r.position.y + r.size.y - 2.0),
@@ -253,7 +302,8 @@ func _draw() -> void:
 	if _selected >= 0 and _selected < ITEMS.size() and _count_of(_selected) > 0:
 		var data: Dictionary = ITEMS[_selected]
 		var tex: Texture2D = _textures[_selected]
-		draw_texture_rect(tex, Rect2(DETAIL.position + Vector2(4, 4), Vector2(22, 22)), false)
+		var tint2: Color = data.get("tint", Color(1, 1, 1))
+		draw_texture_rect(tex, Rect2(DETAIL.position + Vector2(4, 4), Vector2(22, 22)), false, tint2)
 		draw_string(font, Vector2(DETAIL.position.x + 28.0, DETAIL.position.y + 13.0),
 			data["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.98, 0.96, 0.9, 0.98))
 		draw_string(font, Vector2(DETAIL.position.x + 28.0, DETAIL.position.y + 22.0),

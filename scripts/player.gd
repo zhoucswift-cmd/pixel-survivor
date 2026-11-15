@@ -24,6 +24,10 @@ const SHEET_UNARMED_PATH := "res://assets/character_sheet_unarmed.png"
 ## 建造模式（手里拿蓝图 + 扳手）
 const SHEET_BUILD_PATH := "res://assets/character_sheet_build.png"
 const FRAME_SIZE := Vector2i(32, 32)
+## 角色衣服的三个原始色阶（换衣服时按这些色替换）
+const SHIRT_DARK := Color8(40, 72, 128)
+const SHIRT_MID := Color8(63, 111, 181)
+const SHIRT_LIGHT := Color8(104, 152, 220)
 const WALK_FPS := 10.0
 const SHOOT_FPS := 12.0
 const DIRS := {"down": 0, "up": 7, "left": 14, "right": 21}
@@ -79,6 +83,10 @@ var _frames_plain: SpriteFrames
 var _frames_baked: SpriteFrames
 var _frames_unarmed: SpriteFrames
 var _frames_build: SpriteFrames
+## 当前衣服颜色（a=0 表示默认蓝）
+var _look_base := Color(0, 0, 0, 0)
+## 染色后的站立表（背包预览用）
+var look_sheet: Texture2D = null
 ## 基地建造模式：手里拿蓝图和扳手
 var build_mode := false
 var _reloading := false
@@ -111,6 +119,7 @@ func _ready() -> void:
 	_sprite.sprite_frames = _frames_plain
 	_sprite.play("idle_down")
 	_sprite.animation_finished.connect(_on_animation_finished)
+	apply_look(GameState.jacket_color())
 
 	var shell := Image.create(2, 2, false, Image.FORMAT_RGBA8)
 	shell.fill(Color(0.86, 0.67, 0.28))
@@ -575,8 +584,67 @@ func _blink() -> void:
 
 
 ## 把横向精灵表切成 12 个动画（4 方向 × idle/walk/shoot）
-func _build_sprite_frames(path: String) -> SpriteFrames:
+## 换衣服：按颜色把所有身体贴图重新上色（a=0 表示恢复默认）
+func apply_look(base: Color) -> void:
+	if base == _look_base:
+		return
+	_look_base = base
+	var use := base.a > 0.0
+	look_sheet = _recolor_texture(load(SHEET_PATH), base) if use else load(SHEET_PATH)
+	_frames_plain = _build_sprite_frames(SHEET_PATH, base if use else Color(0, 0, 0, 0))
+	_frames_baked = _build_sprite_frames(SHEET_BAKED_PATH, base if use else Color(0, 0, 0, 0))
+	_frames_unarmed = _build_sprite_frames(SHEET_UNARMED_PATH, base if use else Color(0, 0, 0, 0))
+	_frames_build = _build_sprite_frames(SHEET_BUILD_PATH, base if use else Color(0, 0, 0, 0))
+
+	# 重新套用当前应该显示的贴图
+	if not armed:
+		_set_body_sheet(_frames_build if build_mode else _frames_unarmed)
+	elif using_baked():
+		_set_body_sheet(_frames_baked)
+	else:
+		_set_body_sheet(_frames_plain)
+
+
+## 颜色 -> 整数 key
+func _color_key(c: Color) -> int:
+	return c.r8 | (c.g8 << 8) | (c.b8 << 16)
+
+
+## 把贴图里衣服的三个色阶换成新颜色
+func _recolor_texture(texture: Texture2D, base: Color) -> Texture2D:
+	var img: Image = texture.get_image()
+	if img == null:
+		return texture
+	if img.get_format() != Image.FORMAT_RGBA8:
+		img.convert(Image.FORMAT_RGBA8)
+	var data: PackedByteArray = img.get_data()
+
+	var dark := base.darkened(0.32)
+	var light := base.lightened(0.28)
+	# 用整数当 key（Array 在字典里是按引用比较的，不能直接拿来当 key）
+	var table := {
+		_color_key(SHIRT_DARK): [dark.r8, dark.g8, dark.b8],
+		_color_key(SHIRT_MID): [base.r8, base.g8, base.b8],
+		_color_key(SHIRT_LIGHT): [light.r8, light.g8, light.b8],
+	}
+	for i in range(0, data.size(), 4):
+		if data[i + 3] == 0:
+			continue
+		var key: int = data[i] | (data[i + 1] << 8) | (data[i + 2] << 16)
+		if table.has(key):
+			var c: Array = table[key]
+			data[i] = c[0]
+			data[i + 1] = c[1]
+			data[i + 2] = c[2]
+	var out := Image.create_from_data(img.get_width(), img.get_height(), false,
+		Image.FORMAT_RGBA8, data)
+	return ImageTexture.create_from_image(out)
+
+
+func _build_sprite_frames(path: String, tint := Color(0, 0, 0, 0)) -> SpriteFrames:
 	var texture: Texture2D = load(path)
+	if tint.a > 0.0:
+		texture = _recolor_texture(texture, tint)
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
 
