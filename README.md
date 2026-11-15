@@ -613,7 +613,7 @@ after 3.5s-> 0 只（确认不再刷）
   （标题 `CRAFT`）；再按 **E** 或 **Tab** 关闭（面板开着时建造模式锁住，走远了也会自动关）。
   **面板里暂时不列建筑和配方**，只显示 `NO RECIPES YET`，等做了配方表再往里填。
 - **背包界面（B）**：`scenes/inventory.tscn` 是 autoload（`CanvasLayer` + `Control`），按 **B** 打开，
-  打开时暂停游戏、再按 B 关闭。布局模仿生存游戏：
+  打开时会**暂停游戏**、显示系统鼠标、并且**屏蔽武器轮盘（Tab）**，再按 B 关闭。布局模仿生存游戏：
   - 顶部页签 `BACKPACK / CHARACTER / CRAFT`（只有 BACKPACK 可用）
   - **左侧**：装备格 4+3 个（帽子/外套/裤子/鞋 · 武器/背包/饰品，目前都是空格）+ 中间**人物预览**
     （取 `character_sheet.png` 的站立帧）+ 下方**属性框** `ATTACK / DEFENSE / SPEED`

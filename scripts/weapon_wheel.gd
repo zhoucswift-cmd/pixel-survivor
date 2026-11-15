@@ -23,6 +23,9 @@ func is_open() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 背包开着的时候不许开武器轮盘
+	if _inventory_open():
+		return
 	if event.is_action_pressed("weapon_wheel"):
 		open_wheel()
 	elif event.is_action_released("weapon_wheel"):
@@ -32,6 +35,12 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	if _open:
 		queue_redraw()
+
+
+## 背包界面是不是开着
+func _inventory_open() -> bool:
+	var inv := get_tree().root.get_node_or_null("Inventory/Panel")
+	return inv != null and inv.has_method("is_open") and inv.is_open()
 
 
 func open_wheel() -> void:
