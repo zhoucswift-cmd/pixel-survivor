@@ -39,9 +39,7 @@ func _on_build_mode_changed(active: bool) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("interact") and at_edge():
-		get_tree().change_scene_to_file("res://scenes/main.tscn")
-		return
+	# 基地边缘不再用 E 出地图（连提示都没有），只有 B 这个调试快捷键还能切场景
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_B:
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
