@@ -22,6 +22,8 @@ var _sleeping_piece: Node2D = null
 var _wake_position := Vector2.ZERO
 ## 工作台制造面板是否打开
 var _craft_open := false
+## 打开制造面板前的鼠标模式（关面板时还原）
+var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 
 func _ready() -> void:
@@ -50,6 +52,8 @@ func _ready() -> void:
 	_builder.build_mode_changed.connect(_on_build_mode_changed)
 	_palette.setup(_builder)
 	_palette.craft_requested.connect(_on_craft_requested)
+	# 基地是建造/制造场景，没有准星，系统光标直接显示
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 
 func _on_build_mode_changed(active: bool) -> void:
@@ -123,11 +127,17 @@ func _bed_near_player() -> Node2D:
 	return _nearest_piece(func(d: BaseFurniture) -> bool: return d.occupied_texture != null, BED_REACH)
 
 
-## 打开 / 关闭工作台制造面板（打开时锁住建造模式）
+## 打开 / 关闭工作台制造面板（打开时锁住建造模式，并把鼠标放出来）
 func _set_craft_open(value: bool) -> void:
 	_craft_open = value
 	_palette.set_mode("craft" if value else "build")
 	_builder.set_build_locked(value)
+	if value:
+		# 面板要用鼠标点，先把系统光标放出来
+		_prev_mouse_mode = Input.mouse_mode
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	else:
+		Input.set_mouse_mode(_prev_mouse_mode)
 
 
 ## 在制造面板里点了某个配方：够材料就做出来
