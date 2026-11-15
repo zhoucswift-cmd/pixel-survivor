@@ -1,6 +1,6 @@
 -- make_city.lua
 -- 生成基地外围的城市背景：800x800（平台 480x480 居中，四周各外扩 160px）
---  小体量的低矮楼房群 / 起火冒烟的楼 / 街上成群的僵尸 / 路灯 / 平台投影
+-- 夜色氛围版：深蓝街道、亮窗、霓虹招牌、路灯光池、雾带、起火楼 + 火光、成群的僵尸
 -- 运行: Aseprite.exe -b --script tools/make_city.lua
 
 local OUT = "C:/game/test/assets/base/city_background.aseprite"
@@ -10,71 +10,110 @@ local PLATFORM = { x = 160, y = 160, w = 480, h = 480 }
 local pc = app.pixelColor
 local function rgb(r, g, b, a) return pc.rgba(r, g, b, a or 255) end
 
-local ROAD     = rgb(46, 48, 56)
-local ROAD_D   = rgb(38, 40, 47)
-local SIDEWALK = rgb(62, 65, 74)
-local LINE     = rgb(104, 98, 70)
+-- 夜色街道
+local ASPHALT  = rgb(26, 28, 38)
+local ASPHALT2 = rgb(32, 36, 47)
+local SIDEWALK = rgb(44, 49, 63)
+local LINE     = rgb(86, 82, 58)
 
+-- 楼顶（都很暗，靠边缘高光提亮）
 local ROOFS = {
-	rgb(78, 82, 94), rgb(90, 94, 106), rgb(66, 70, 80),
-	rgb(98, 86, 74), rgb(82, 88, 100), rgb(72, 76, 88),
-	rgb(104, 96, 82), rgb(62, 66, 76),
+	rgb(38, 42, 56), rgb(32, 36, 49), rgb(44, 48, 63),
+	rgb(46, 42, 54), rgb(36, 40, 52), rgb(30, 34, 46),
+	rgb(50, 46, 58), rgb(34, 39, 51),
 }
-local OUTLINE   = rgb(18, 19, 24)
-local ROOF_LIT  = rgb(120, 124, 138)
-local DETAIL    = rgb(30, 33, 39)
-local TANK      = rgb(104, 96, 84)
-local SOLAR     = rgb(38, 52, 74)
-local GARDEN    = rgb(58, 84, 54)
+local OUTLINE   = rgb(14, 16, 22)
+local EDGE_LIT  = rgb(78, 88, 110)
+local DETAIL    = rgb(22, 25, 33)
+local TANK      = rgb(64, 62, 62)
+local SOLAR     = rgb(26, 36, 54)
+local GARDEN    = rgb(34, 52, 38)
 
-local FIRE_HOT  = rgb(255, 238, 160)
-local FIRE      = rgb(255, 152, 62)
-local FIRE_D    = rgb(206, 74, 40)
-local SMOKE     = rgb(86, 88, 98)
-local SMOKE_L   = rgb(116, 118, 128)
+-- 光
+local LAMP      = rgb(255, 224, 168)
+local LAMP_GLOW = rgb(255, 198, 120)
+local WIN       = rgb(255, 210, 130)
+local WIN2      = rgb(255, 176, 92)
+local NEON_P    = rgb(255, 96, 158)
+local NEON_C    = rgb(110, 236, 224)
+local FIRE_HOT  = rgb(255, 240, 176)
+local FIRE      = rgb(255, 148, 58)
+local FIRE_D    = rgb(198, 68, 36)
 
-local ZOMBIE    = rgb(148, 186, 116)
-local ZOMBIE_D  = rgb(104, 136, 84)
+-- 雾 / 阴天底色
+local HAZE      = rgb(56, 64, 88)
+local HAZE_H    = rgb(44, 50, 70)
 
-local LAMP      = rgb(255, 210, 142)
+local ZOMBIE    = rgb(92, 126, 88)
+local ZOMBIE_D  = rgb(66, 92, 66)
 
 local img = Image(W, H, ColorMode.RGB)
-img:clear(ROAD)
+img:clear(ASPHALT)
 
 local function put(x, y, c)
 	if x >= 0 and y >= 0 and x < W and y < H then img:putPixel(x, y, c) end
 end
-
 local function getc(x, y)
-	if x < 0 or y < 0 or x >= W or y >= H then return ROAD end
+	if x < 0 or y < 0 or x >= W or y >= H then return ASPHALT end
 	return img:getPixel(x, y)
 end
-
 local function fill(x0, y0, x1, y1, c)
 	for y = y0, y1 do for x = x0, x1 do put(x, y, c) end end
 end
 
-local seed = 424242
+local seed = 20241115
 local function rnd()
 	seed = (seed * 1103515245 + 12345) % 2147483648
 	return seed / 2147483648.0
 end
-
 local function rndi(a, b)
 	return a + math.floor(rnd() * (b - a + 1))
 end
 
+-- 把某点朝某个颜色混合（t = 0..1）
+local function blend(x, y, c, t)
+	if t <= 0 then return end
+	if t > 1 then t = 1 end
+	local p = getc(x, y)
+	local function ch(a, b)
+		local v = math.floor(a * (1 - t) + b * t + 0.5)
+		if v < 0 then return 0 elseif v > 255 then return 255 end
+		return v
+	end
+	put(x, y, rgb(ch(pc.rgbaR(p), pc.rgbaR(c)), ch(pc.rgbaG(p), pc.rgbaG(c)), ch(pc.rgbaB(p), pc.rgbaB(c))))
+end
+
+-- 圆形光晕（衰减平方，像路灯/火光打在地上）
+local function glow(cx, cy, radius, c, strength)
+	local r2 = radius * radius
+	for y = math.floor(cy - radius), math.ceil(cy + radius) do
+		for x = math.floor(cx - radius), math.ceil(cx + radius) do
+			local dx, dy = x - cx, y - cy
+			local d2 = dx * dx + dy * dy
+			if d2 <= r2 then
+				local f = 1 - math.sqrt(d2) / radius
+				blend(x, y, c, f * f * strength)
+			end
+		end
+	end
+end
+
 ---------------------------------------------------------------
--- 1) 街道地面
+-- 1) 街道地面（湿漉漉的沥青）
 ---------------------------------------------------------------
 for y = 0, H - 1 do
 	for x = 0, W - 1 do
 		local r = rnd()
-		local c = ROAD
-		if r < 0.10 then c = ROAD_D
-		elseif r < 0.13 then c = SIDEWALK end
+		local c = ASPHALT
+		if r < 0.12 then c = ASPHALT2
+		elseif r < 0.145 then c = SIDEWALK end
 		put(x, y, c)
 	end
+end
+-- 路面裂缝 / 湿反光
+for i = 1, 260 do
+	local x, y = rndi(0, W - 1), rndi(0, H - 1)
+	if rnd() < 0.5 then put(x, y, rgb(20, 22, 30)) else put(x, y, rgb(40, 46, 60)) end
 end
 
 ---------------------------------------------------------------
@@ -83,8 +122,30 @@ end
 local BLOCK = 72
 local STREET = 14
 
+local function antenna(cx, cy)
+	fill(cx, cy, cx, cy + 4, DETAIL)
+	put(cx, cy - 1, rgb(150, 60, 60))
+	glow(cx, cy - 1, 5, rgb(255, 90, 80), 0.55)
+end
+
+local function neon_sign(bx, by, bw, bh)
+	-- 屋顶霓虹招牌：一条亮色边 + 光晕
+	local horiz = rnd() < 0.5
+	local c = rnd() < 0.5 and NEON_P or NEON_C
+	if horiz then
+		local sx, sy = rndi(bx + 3, math.max(bx + 3, bx + bw - 12)), rndi(by + 3, math.max(by + 3, by + bh - 4))
+		fill(sx, sy, sx + rndi(6, 10), sy, c)
+		glow(sx + 4, sy, 9, c, 0.42)
+	else
+		local sx, sy = rndi(bx + 3, math.max(bx + 3, bx + bw - 4)), rndi(by + 3, math.max(by + 3, by + bh - 10))
+		fill(sx, sy, sx, sy + rndi(6, 10), c)
+		glow(sx, sy + 4, 9, c, 0.42)
+	end
+end
+
 local function roof_props(bx, by, bw, bh)
-	local kind = rndi(1, 7)
+	local kind = rndi(1, 8)
+	if bw < 10 or bh < 10 then return end
 	if kind == 1 then
 		-- 空调外机
 		for i = 1, rndi(1, 3) do
@@ -92,7 +153,7 @@ local function roof_props(bx, by, bw, bh)
 			local px = rndi(bx + 3, math.max(bx + 3, bx + bw - pw - 3))
 			local py = rndi(by + 3, math.max(by + 3, by + bh - ph - 3))
 			fill(px, py, px + pw - 1, py + ph - 1, DETAIL)
-			fill(px, py, px + pw - 1, py, rgb(120, 124, 134))
+			fill(px, py, px + pw - 1, py, rgb(70, 78, 96))
 		end
 	elseif kind == 2 then
 		-- 水箱
@@ -101,35 +162,41 @@ local function roof_props(bx, by, bw, bh)
 		local py = rndi(by + 4, math.max(by + 4, by + bh - ph - 4))
 		fill(px, py, px + pw - 1, py + ph - 1, OUTLINE)
 		fill(px + 1, py + 1, px + pw - 2, py + ph - 2, TANK)
-		fill(px + 1, py + 1, px + pw - 2, py + 1, rgb(134, 124, 108))
+		fill(px + 1, py + 1, px + pw - 2, py + 1, rgb(92, 90, 88))
 	elseif kind == 3 then
-		-- 太阳能板
+		-- 太阳能板（夜里反着冷光）
 		for i = 1, rndi(2, 4) do
 			local pw, ph = rndi(7, 10), rndi(5, 7)
 			local px = rndi(bx + 3, math.max(bx + 3, bx + bw - pw - 3))
 			local py = rndi(by + 3, math.max(by + 3, by + bh - ph - 3))
 			fill(px, py, px + pw - 1, py + ph - 1, SOLAR)
-			fill(px, py, px + pw - 1, py, rgb(70, 92, 124))
+			fill(px, py, px + pw - 1, py, rgb(52, 74, 108))
 		end
 	elseif kind == 4 then
-		-- 屋顶小花园
+		-- 屋顶花园
 		local pw, ph = rndi(10, 18), rndi(8, 14)
 		local px = rndi(bx + 3, math.max(bx + 3, bx + bw - pw - 3))
 		local py = rndi(by + 3, math.max(by + 3, by + bh - ph - 3))
 		fill(px, py, px + pw - 1, py + ph - 1, OUTLINE)
 		fill(px + 1, py + 1, px + pw - 2, py + ph - 2, GARDEN)
 		for i = 1, 6 do
-			put(px + rndi(1, pw - 2), py + rndi(1, ph - 2), rgb(84, 118, 72))
+			put(px + rndi(1, pw - 2), py + rndi(1, ph - 2), rgb(52, 78, 52))
 		end
 	elseif kind == 5 then
-		-- 楼梯间 / 机房
+		-- 楼梯间
 		local pw, ph = rndi(10, 16), rndi(9, 13)
 		local px = rndi(bx + 3, math.max(bx + 3, bx + bw - pw - 3))
 		local py = rndi(by + 3, math.max(by + 3, by + bh - ph - 3))
 		fill(px, py, px + pw - 1, py + ph - 1, OUTLINE)
-		fill(px + 1, py + 1, px + pw - 2, py + ph - 2, rgb(78, 82, 92))
-		fill(px + 1, py + 1, px + pw - 2, py + 1, ROOF_LIT)
-		fill(px + pw - 4, py + ph - 4, px + pw - 3, py + ph - 2, DETAIL)
+		fill(px + 1, py + 1, px + pw - 2, py + ph - 2, rgb(40, 45, 58))
+		fill(px + 1, py + 1, px + pw - 2, py + 1, EDGE_LIT)
+		-- 门口漏出来的一点灯光
+		fill(px + pw - 4, py + ph - 4, px + pw - 3, py + ph - 2, WIN2)
+		glow(px + pw - 3, py + ph - 3, 7, WIN2, 0.4)
+	elseif kind == 6 then
+		antenna(bx + rndi(4, math.max(4, bw - 4)), by + rndi(4, math.max(4, bh - 4)))
+	elseif kind == 7 then
+		neon_sign(bx, by, bw, bh)
 	end
 end
 
@@ -137,20 +204,20 @@ local function building(bx, by, bw, bh)
 	local roof = ROOFS[rndi(1, #ROOFS)]
 	fill(bx, by, bx + bw - 1, by + bh - 1, roof)
 
-	-- 轻微斑驳
-	for i = 1, math.floor(bw * bh / 26) do
+	for i = 1, math.floor(bw * bh / 30) do
 		put(bx + rndi(1, bw - 2), by + rndi(1, bh - 2),
-			rnd() < 0.5 and rgb(64, 68, 78) or rgb(104, 108, 120))
+			rnd() < 0.5 and rgb(28, 32, 44) or rgb(52, 58, 74))
 	end
 
-	-- 轮廓 + 受光边
+	-- 轮廓 + 受光边（上边和左边亮一点，像被街道灯照到）
 	for x = bx, bx + bw - 1 do
 		put(x, by, OUTLINE)
-		put(x, by + 1, ROOF_LIT)
+		put(x, by + 1, EDGE_LIT)
 		put(x, by + bh - 1, OUTLINE)
 	end
 	for y = by, by + bh - 1 do
 		put(bx, y, OUTLINE)
+		put(bx + 1, y, rgb(58, 66, 84))
 		put(bx + bw - 1, y, OUTLINE)
 	end
 
@@ -159,164 +226,146 @@ end
 
 for by = 0, H, BLOCK do
 	for bx = 0, W, BLOCK do
-		local count = (rnd() < 0.45) and 1 or 2
-		local x = bx + rndi(1, 3)
-		local y = by + rndi(1, 3)
-		for i = 1, count do
-			local w = math.floor((BLOCK - STREET - (count - 1) * 6) / count) - rndi(0, 4)
-			local h = BLOCK - STREET - rndi(0, 16)
-			building(x, y, math.max(w, 12), math.max(h, 12))
-			x = x + w + 6
-		end
+		local w = rndi(BLOCK - STREET - 12, BLOCK - STREET)
+		local h = rndi(BLOCK - STREET - 12, BLOCK - STREET)
+		building(bx + 2, by + 2, w, h)
 	end
 end
 
--- 街区之间的人行道边
+---------------------------------------------------------------
+-- 3) 路灯 + 街上的光池
+---------------------------------------------------------------
+local lamps = {}
 for by = 0, H, BLOCK do
 	for bx = 0, W, BLOCK do
-		fill(bx, by + BLOCK - STREET, bx + BLOCK - 1, by + BLOCK - STREET + 1, SIDEWALK)
-		fill(bx + BLOCK - STREET, by, bx + BLOCK - STREET + 1, by + BLOCK - 1, SIDEWALK)
-	end
-end
-
--- 路中线
-for by = 0, H, BLOCK do
-	local y = by + BLOCK - STREET + 6
-	for x = 0, W - 1, 8 do put(x, y, LINE) end
-end
-for bx = 0, W, BLOCK do
-	local x = bx + BLOCK - STREET + 6
-	for y = 0, H - 1, 8 do put(x, y, LINE) end
-end
-
----------------------------------------------------------------
--- 3) 起火冒烟（3 处）
----------------------------------------------------------------
--- 位置要落在平台外的四条边里（图片坐标 = 世界坐标 + 160）
-local fires = {
-	{ x = 74, y = 330 },    -- 左侧
-	{ x = 726, y = 380 },   -- 右侧
-	{ x = 300, y = 706 },   -- 下侧
-	{ x = 420, y = 96 },    -- 上侧
-}
-
-for _, f in ipairs(fires) do
-	for i = 1, 60 do
-		local fx = f.x + rndi(-14, 14)
-		local fy = f.y + rndi(-10, 10)
-		local h = rndi(2, 6)
-		for k = 0, h do
-			local c = FIRE
-			if k == 0 then c = FIRE_HOT elseif k >= h - 1 then c = FIRE_D end
-			put(fx, fy - k, c)
-			if rnd() < 0.4 then put(fx + 1, fy - k, c) end
-		end
-	end
-	-- 烟柱
-	local sx = f.x + rndi(-3, 3)
-	for i = 0, 52 do
-		local t = i / 52.0
-		local cx = sx + math.floor(math.sin(t * 7.0) * 12.0)
-		local cy = f.y - 16 - i * 2
-		local r = 2 + math.floor(t * 8)
-		for dy = -r, r do
-			for dx = -r, r do
-				if dx * dx + dy * dy <= r * r then
-					local c = SMOKE
-					if (dx + dy) % 3 == 0 then c = SMOKE_L end
-					put(cx + dx, cy + dy, c)
-				end
-			end
-		end
-	end
-end
-
--- 火光把周围照亮一点
-for _, f in ipairs(fires) do
-	for dy = -34, 34 do
-		for dx = -34, 34 do
-			local d = math.sqrt(dx * dx + dy * dy)
-			if d <= 34 then
-				local x, y = f.x + dx, f.y + dy
-				local c = getc(x, y)
-				if c ~= FIRE and c ~= FIRE_HOT and c ~= FIRE_D and c ~= SMOKE and c ~= SMOKE_L then
-					local k = (1.0 - d / 34.0) * 0.42
-					local cr, cg, cb = pc.rgbaR(c), pc.rgbaG(c), pc.rgbaB(c)
-					local r = cr + (255 - cr) * k * 0.35
-					local g = cg + (150 - cg) * k * 0.55
-					local b = cb + (80 - cb) * k * 0.35
-					put(x, y, rgb(math.floor(r), math.floor(g), math.floor(b)))
-				end
+		-- 每个街口放一盏
+		local lx = bx + BLOCK - STREET / 2
+		local ly = by + BLOCK - STREET / 2
+		-- 有的街口不亮（坏灯 / 背光），光池大小也不一样
+		if rnd() < 0.72 then
+			lamps[#lamps + 1] = { lx, ly }
+			fill(lx - 1, ly, lx, ly, DETAIL)
+			if rnd() < 0.12 then
+				put(lx, ly, rgb(90, 78, 60))          -- 坏灯
+			else
+				put(lx, ly, LAMP)
+				glow(lx, ly + 1, rndi(18, 32), LAMP_GLOW, rndi(42, 62) / 100.0)
 			end
 		end
 	end
 end
 
 ---------------------------------------------------------------
--- 4) 街上成群的僵尸
+-- 3.5) 街上几辆车的车灯
 ---------------------------------------------------------------
-local function zombie(x, y)
-	put(x, y, ZOMBIE)
-	put(x, y + 1, ZOMBIE_D)
-	if rnd() < 0.5 then put(x + 1, y, ZOMBIE_D) end
-end
-
-for i = 1, 70 do
-	local gx = rndi(8, W - 8)
-	local gy = rndi(8, H - 8)
-	local n = rndi(8, 22)
-	for k = 1, n do
-		local zx = gx + rndi(-11, 11)
-		local zy = gy + rndi(-9, 9)
-		local base = getc(zx, zy)
-		if base == ROAD or base == ROAD_D or base == SIDEWALK or base == LINE then
-			zombie(zx, zy)
+for i = 1, 7 do
+	local cx = rndi(10, W - 10)
+	local cy = rndi(10, H - 10)
+	local horiz = rnd() < 0.5
+	local dirx = (rnd() < 0.5) and -1 or 1
+	local diry = (rnd() < 0.5) and -1 or 1
+	if horiz then
+		local beam = 14
+		for k = 1, beam do
+			blend(cx + dirx * k, cy, rgb(255, 240, 200), 0.42 * (1 - k / beam))
+			blend(cx + dirx * k, cy + 1, rgb(255, 236, 190), 0.22 * (1 - k / beam))
 		end
+		put(cx, cy, rgb(255, 246, 214))
+		put(cx + 1, cy, rgb(255, 246, 214))
+		put(cx - dirx, cy + 1, rgb(220, 60, 50))
+	else
+		local beam = 14
+		for k = 1, beam do
+			blend(cx, cy + diry * k, rgb(255, 240, 200), 0.42 * (1 - k / beam))
+			blend(cx + 1, cy + diry * k, rgb(255, 236, 190), 0.22 * (1 - k / beam))
+		end
+		put(cx, cy, rgb(255, 246, 214))
+		put(cx, cy + 1, rgb(255, 246, 214))
+		put(cx + 1, cy - diry, rgb(220, 60, 50))
 	end
 end
 
 ---------------------------------------------------------------
--- 5) 路灯
+-- 4) 路上成群的僵尸（一小撮一小撮）
 ---------------------------------------------------------------
-for i = 1, 22 do
-	local lx = rndi(6, W - 6)
-	local ly = rndi(6, H - 6)
-	if getc(lx, ly) == ROAD or getc(lx, ly) == ROAD_D then
-		put(lx, ly, LAMP)
-		for dy = -5, 5 do
-			for dx = -5, 5 do
-				local d = dx * dx + dy * dy
-				if d <= 25 and d > 3 then
-					local c = getc(lx + dx, ly + dy)
-					if c == ROAD or c == ROAD_D then put(lx + dx, ly + dy, rgb(58, 56, 54)) end
-				end
+local function zombie(cx, cy)
+	put(cx, cy, ZOMBIE)
+	put(cx + 1, cy, ZOMBIE)
+	put(cx, cy + 1, ZOMBIE_D)
+	put(cx + 1, cy + 1, ZOMBIE_D)
+	put(cx + (rnd() < 0.5 and -1 or 2), cy + 1, ZOMBIE_D)
+end
+
+for i = 1, 26 do
+	local cx = rndi(0, W - 1)
+	local cy = rndi(0, H - 1)
+	local n = rndi(2, 7)
+	for j = 1, n do
+		zombie(cx + rndi(-10, 10), cy + rndi(-8, 8))
+	end
+end
+
+---------------------------------------------------------------
+-- 5) 起火的楼 + 烟
+---------------------------------------------------------------
+local function fire(cx, cy)
+	glow(cx, cy, 26, FIRE, 0.5)
+	fill(cx - 2, cy, cx + 2, cy + 1, FIRE_D)
+	fill(cx - 1, cy - 1, cx + 1, cy, FIRE)
+	fill(cx, cy - 2, cx, cy - 1, FIRE_HOT)
+	-- 烟柱（往上飘）
+	for i = 1, rndi(10, 22) do
+		local sy = cy - 4 - i
+		local sx = cx + math.floor(math.sin(i * 0.5) * 4)
+		blend(sx, sy, HAZE_H, 0.55)
+		if i % 3 == 0 then blend(sx + 1, sy, HAZE, 0.4) end
+	end
+end
+
+for i = 1, 5 do
+	fire(rndi(30, W - 30), rndi(30, H - 30))
+end
+
+---------------------------------------------------------------
+-- 6) 雾带（横着的几层，弱化整体对比）
+---------------------------------------------------------------
+for i = 1, 7 do
+	local y0 = rndi(0, H - 1)
+	local hgt = rndi(6, 18)
+	for y = y0, y0 + hgt do
+		if y >= 0 and y < H then
+			for x = 0, W - 1 do
+				local f = (1 - math.abs((y - y0) / (hgt + 1) - 0.5) * 2)
+				blend(x, y, HAZE, 0.10 + f * 0.14)
 			end
 		end
 	end
 end
 
 ---------------------------------------------------------------
--- 6) 平台投影
+-- 7) 平台四周的阴影（让屋顶看起来是“高出街道”的）
 ---------------------------------------------------------------
-for ring = 0, 4 do
-	local prob = 1.0 - ring / 5.0
-	local x0 = PLATFORM.x - ring * 2
-	local y0 = PLATFORM.y - ring * 2
-	local x1 = PLATFORM.x + PLATFORM.w + ring * 2
-	local y1 = PLATFORM.y + PLATFORM.h + ring * 2
-	for x = x0, x1 do
-		if rnd() < prob then put(x, y0, rgb(16, 17, 21)) end
-		if rnd() < prob then put(x, y1, rgb(16, 17, 21)) end
-	end
-	for y = y0, y1 do
-		if rnd() < prob then put(x0, y, rgb(16, 17, 21)) end
-		if rnd() < prob then put(x1, y, rgb(16, 17, 21)) end
+local SHADOW = 34
+for y = PLATFORM.y - SHADOW, PLATFORM.y + PLATFORM.h + SHADOW do
+	for x = PLATFORM.x - SHADOW, PLATFORM.x + PLATFORM.w + SHADOW do
+		if x >= 0 and y >= 0 and x < W and y < H then
+			local dx = math.max(PLATFORM.x - x, x - (PLATFORM.x + PLATFORM.w), 0)
+			local dy = math.max(PLATFORM.y - y, y - (PLATFORM.y + PLATFORM.h), 0)
+			local d = math.max(dx, dy)
+			local inside = x >= PLATFORM.x and x < PLATFORM.x + PLATFORM.w
+				and y >= PLATFORM.y and y < PLATFORM.y + PLATFORM.h
+			if not inside then
+				blend(x, y, rgb(6, 8, 14), 0.55 * (1 - d / SHADOW))
+			end
+		end
 	end
 end
-fill(PLATFORM.x, PLATFORM.y, PLATFORM.x + PLATFORM.w - 1, PLATFORM.y + PLATFORM.h - 1, rgb(14, 15, 19))
+
+-- 平台区域留黑（平台本身会盖在上面）
+fill(PLATFORM.x, PLATFORM.y, PLATFORM.x + PLATFORM.w - 1, PLATFORM.y + PLATFORM.h - 1, rgb(0, 0, 0))
 
 local spr = Sprite(W, H, ColorMode.RGB)
 spr.layers[1].name = "city"
 spr:newCel(spr.layers[1], spr.frames[1], img, Point(0, 0))
 spr:saveAs(OUT)
-print(string.format("saved %s  %dx%d", OUT, W, H))
+print("saved city background")
