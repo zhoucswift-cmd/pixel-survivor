@@ -40,6 +40,8 @@ var _player: Node = null
 var _atk := 0
 var _def := 0
 var _speed := 100
+## 打开背包前系统鼠标是什么状态（关掉时还原）
+var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 
 func _ready() -> void:
@@ -69,7 +71,13 @@ func toggle() -> void:
 	_open = not _open
 	visible = _open
 	if _open:
+		# 背包要用鼠标点格子：先把系统光标放出来
+		_prev_mouse_mode = Input.mouse_mode
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		_refresh_stats()
+	else:
+		# 关掉时恢复（草地是隐藏光标 + 自绘准心）
+		Input.set_mouse_mode(_prev_mouse_mode)
 	get_tree().paused = _open
 	queue_redraw()
 
