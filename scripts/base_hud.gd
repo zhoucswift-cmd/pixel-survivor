@@ -13,13 +13,13 @@ const FOOTER_H := 26.0
 const RECIPES := {
 	"tools": [],
 	"clothing": [
-		{"out": "casual_hat", "name": "CASUAL HAT", "tex": "res://assets/base/icon_hat.png", "tint": Color8(198, 176, 128), "cost": {"cloth": 2, "rope": 1}},
-		{"out": "casual_top", "name": "CASUAL TOP", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(110, 160, 210), "cost": {"cloth": 7, "rope": 2}},
-		{"out": "casual_pants", "name": "CASUAL PANTS", "tex": "res://assets/base/icon_pants.png", "tint": Color8(84, 92, 116), "cost": {"cloth": 4, "rope": 1}},
-		{"out": "casual_shoes", "name": "CASUAL SHOES", "tex": "res://assets/base/icon_boots.png", "tint": Color8(126, 84, 52), "cost": {"cloth": 5, "rope": 3}},
+		{"out": "casual_hat", "name": "CASUAL HAT", "tex": "res://assets/base/icon_hat.png", "tint": Color8(198, 176, 128), "cost": {"cloth": 2, "rope": 1}, "desc": ["A casual cloth cap.", "Keeps the sun off", "your eyes."]},
+		{"out": "casual_top", "name": "CASUAL TOP", "tex": "res://assets/base/icon_shirt.png", "tint": Color8(110, 160, 210), "cost": {"cloth": 7, "rope": 2}, "desc": ["A casual everyday", "top. Simple and", "comfortable."]},
+		{"out": "casual_pants", "name": "CASUAL PANTS", "tex": "res://assets/base/icon_pants.png", "tint": Color8(84, 92, 116), "cost": {"cloth": 4, "rope": 1}, "desc": ["Comfortable pants", "for everyday work."]},
+		{"out": "casual_shoes", "name": "CASUAL SHOES", "tex": "res://assets/base/icon_boots.png", "tint": Color8(126, 84, 52), "cost": {"cloth": 5, "rope": 3}, "desc": ["Light shoes, good", "for walking around."]},
 	],
 	"carpentry": [
-		{"out": "bed", "name": "BED", "tex": "res://assets/base/bed.png", "cost": {"cloth": 2, "rope": 1}},
+		{"out": "bed", "name": "BED", "tex": "res://assets/base/bed.png", "cost": {"cloth": 2, "rope": 1}, "desc": ["A place to sleep.", "Restores your", "energy overnight."]},
 	],
 }
 
@@ -76,7 +76,19 @@ func _recipe_rect(index: int) -> Rect2:
 
 
 func _process(_delta: float) -> void:
-	# 鼠标移到别的家具上时刷新悬停信息
+	# 制造面板：看鼠标压在哪个配方上（悬停就在左边弹出详情）
+	if _mode == "craft":
+		var list: Array = recipes()
+		var hovered := -1
+		var mouse := get_local_mouse_position()
+		for i in list.size():
+			if _recipe_rect(i).has_point(mouse):
+				hovered = i
+				break
+		if hovered != _hover_recipe:
+			_hover_recipe = hovered
+			queue_redraw()
+		return
 	queue_redraw()
 
 
@@ -193,6 +205,10 @@ func _draw() -> void:
 				draw_string(font, Vector2(r.position.x + 26.0, r.position.y + 19.0), cost_text,
 					HORIZONTAL_ALIGNMENT_LEFT, -1, 5,
 					Color(0.78, 0.84, 0.95, 0.9) if afford else Color(0.9, 0.5, 0.45, 0.9))
+
+			# 悬停的那一条，在左边弹出详情栏
+			if _hover_recipe >= 0 and _hover_recipe < list.size():
+				_draw_recipe_detail(list[_hover_recipe], panel, font)
 	else:
 		var types: Array = _builder.types
 		for i in types.size():
@@ -240,3 +256,52 @@ func _draw() -> void:
 	for i in lines.size():
 		draw_string(font, Vector2(6.0, screen.y - 22.0 + float(i) * 8.0), lines[i],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.78, 0.84, 0.95, 0.9))
+
+## 制造面板左侧的物品详情（悬停配方时出现）
+func _draw_recipe_detail(recipe: Dictionary, panel: Rect2, font: Font) -> void:
+	var w := 96.0
+	var h := 124.0
+	var rect := Rect2(panel.position.x - w - 5.0, panel.position.y + 8.0, w, h)
+	draw_rect(rect, Color(0.07, 0.075, 0.095, 0.98))
+	draw_rect(rect, Color(1, 1, 1, 0.16), false, 1.0)
+
+	# 图标 + 名字
+	var idx: int = recipes().find(recipe)
+	var tex: Texture2D = null
+	if idx >= 0 and idx < _recipe_tex.size():
+		tex = _recipe_tex[idx]
+	if tex != null:
+		draw_texture_rect(tex, Rect2(rect.position + Vector2(5, 5), Vector2(22, 22)),
+			false, recipe.get("tint", Color(1, 1, 1)))
+	draw_string(font, Vector2(rect.position.x + 31.0, rect.position.y + 14.0), recipe["name"],
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.98, 0.96, 0.9, 0.98))
+	draw_string(font, Vector2(rect.position.x + 31.0, rect.position.y + 23.0),
+		"EQUIPMENT" if GameState.EQUIP_STATS.has(recipe["out"]) else "FURNITURE",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.7, 0.75, 0.86, 0.85))
+	draw_line(Vector2(rect.position.x + 5.0, rect.position.y + 32.0),
+		Vector2(rect.position.x + rect.size.x - 5.0, rect.position.y + 32.0),
+		Color(1, 1, 1, 0.10), 1.0)
+
+	# 属性
+	var y := rect.position.y + 42.0
+	var stats: Dictionary = GameState.EQUIP_STATS.get(recipe["out"], {})
+	if not stats.is_empty():
+		draw_string(font, Vector2(rect.position.x + 5.0, y), "DEF   +%d" % int(stats["def"]),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.86, 0.92, 1.0, 0.95))
+		y += 10.0
+		draw_string(font, Vector2(rect.position.x + 5.0, y), "DUR   %d" % int(stats["dur"]),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.86, 0.92, 1.0, 0.95))
+		y += 12.0
+
+	# 描述
+	for line: String in recipe.get("desc", []):
+		draw_string(font, Vector2(rect.position.x + 5.0, y), line,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.78, 0.82, 0.9, 0.9))
+		y += 8.0
+
+	# 底部：材料
+	var parts: Array[String] = []
+	for k: String in recipe["cost"]:
+		parts.append("%d %s" % [int(recipe["cost"][k]), k.to_upper()])
+	draw_string(font, Vector2(rect.position.x + 5.0, rect.position.y + rect.size.y - 7.0),
+		" ".join(parts), HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.95, 0.9, 0.7, 0.95))
