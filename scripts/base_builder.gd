@@ -16,8 +16,8 @@ const BLOCKED_TILES := [Vector2i(7, 1), Vector2i(0, 2), Vector2i(1, 2)]
 
 ## 可建造的家具（留空就自动加载）
 @export var types: Array[BaseFurniture] = []
-## 每种家具的初始库存
-@export var initial_stock := 8
+## 每种家具的初始库存（测试用先给 1）
+@export var initial_stock := 1
 
 ## 当前选中的家具；-1 = 还没选（进建造模式时不预选）
 var selected := -1
@@ -196,6 +196,17 @@ func upgrade(cell: Vector2i) -> bool:
 	return true
 
 
+## 滚轮调头：只在 0° / 90° 两档之间切换（1x2 和 2x1 互换）
+func flip_at(cell: Vector2i) -> void:
+	var piece: Node2D = _pieces.get(cell, null)
+	if piece == null:
+		if selected_type() == null:
+			return
+		_placing_steps = 0 if _placing_steps % 2 == 1 else 1
+		return
+	rotate_at(cell, 1 if int(piece.steps) % 2 == 0 else -1)
+
+
 ## 旋转：鼠标指着家具就转它，指着空地就转“下一件”的朝向
 func rotate_at(cell: Vector2i, direction: int) -> void:
 	var piece: Node2D = _pieces.get(cell, null)
@@ -291,6 +302,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		var key: int = event.physical_keycode
 		if key >= KEY_1 and key <= KEY_9:
 			select(key - KEY_1)
+		elif key == KEY_R:
+			rotate_at(_mouse_cell(), 1)
 		elif key == KEY_U:
 			upgrade(_mouse_cell())
 		elif key == KEY_DELETE:
@@ -315,12 +328,10 @@ func _unhandled_input(event: InputEvent) -> void:
 						recycle(cell)
 					else:
 						clear_selection()
-			MOUSE_BUTTON_WHEEL_UP:
+			MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN:
 				if event.pressed:
-					rotate_at(cell, 1)
-			MOUSE_BUTTON_WHEEL_DOWN:
-				if event.pressed:
-					rotate_at(cell, -1)
+					# 滚轮只做“调头”：在 0°/90° 之间切换（正反滚都一样）
+					flip_at(cell)
 
 
 ## Tab：进 / 出建造模式

@@ -104,7 +104,7 @@ func _draw() -> void:
 		level_text = "  LV%d/%d" % [hovered.level, hovered.data.max_level]
 	draw_string(font, Vector2(x + 6.0, y + 9.0), name_text + level_text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.95, 0.95, 0.9, 0.95))
-	var hint := "LMB SELECT / BUILD / DRAG    RMB CANCEL / RECYCLE    WHEEL ROTATE    U UPGRADE    DEL CLEAR"
+	var hint := "LMB SELECT / BUILD / DRAG   RMB CANCEL / RECYCLE   R ROTATE   WHEEL FLIP   U UPGRADE   DEL CLEAR"
 	draw_string(font, Vector2(8.0, y + 33.0), hint,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(0.8, 0.85, 0.95, 0.8))
 
