@@ -21,9 +21,9 @@ SOURCE = ROOT / "assets" / "character.aseprite"
 UNARMED = ROOT / "assets" / "character_sheet_unarmed.png"
 OUTPUT = ROOT / "assets" / "character_sheet_build.png"
 
-PAPER = (232, 226, 208, 255)    # 米白图纸
-PAPER_D = (186, 178, 156, 255)
-PAPER_L = (58, 106, 168, 255)   # 蓝图线条
+PAPER = (232, 236, 244, 255)    # 白条纹
+PAPER_D = (40, 86, 160, 255)    # 蓝条纹
+PAPER_L = (150, 190, 235, 255)  # 高光
 WRENCH = (196, 202, 212, 255)
 WRENCH_D = (120, 126, 138, 255)
 OUTLINE = (26, 22, 38, 255)
@@ -55,30 +55,28 @@ def put(px, x, y, color):
         px[int(x), int(y)] = color
 
 
+# 蓝图尺寸（横着的纸）
+PAPER_W, PAPER_H = 13, 7
+
+
 def draw_blueprint(px, cx, cy, direction):
-    """一卷蓝图：米白纸 + 蓝图线条 + 深色描边。"""
+    """横着的蓝白相间图纸：整张纸用蓝/白竖条纹，深色描边。"""
     cx, cy = int(round(cx)), int(round(cy))
-    if direction in (2, 3):   # 左右：横着拿
-        w, h = 8, 5
-    else:                     # 上下：竖着拿
-        w, h = 5, 8
-    x0, y0 = cx - w // 2, cy - h // 2
-    for x in range(w):
-        for y in range(h):
-            edge = x in (0, w - 1) or y in (0, h - 1)
-            put(px, x0 + x, y0 + y, OUTLINE if edge else PAPER)
-    # 内部再压一圈浅灰，显得是卷起的纸
-    for x in range(1, w - 1):
-        put(px, x0 + x, y0 + 1, PAPER_D)
-    # 蓝图线条
-    if w > h:
-        for x in range(2, w - 2, 2):
-            put(px, x0 + x, y0 + 2, PAPER_L)
-            put(px, x0 + x, y0 + 3, PAPER_L)
-    else:
-        for y in range(3, h - 1, 2):
-            put(px, x0 + 1, y0 + y, PAPER_L)
-            put(px, x0 + 2, y0 + y, PAPER_L)
+    x0 = cx - PAPER_W // 2
+    y0 = cy - PAPER_H // 2
+
+    for x in range(PAPER_W):
+        for y in range(PAPER_H):
+            edge = x in (0, PAPER_W - 1) or y in (0, PAPER_H - 1)
+            if edge:
+                put(px, x0 + x, y0 + y, OUTLINE)
+            else:
+                # 蓝白相间：每 2 列换一次色
+                stripe = ((x - 1) // 2) % 2
+                put(px, x0 + x, y0 + y, PAPER_D if stripe == 0 else PAPER)
+    # 顶部一条高光，像纸卷起
+    for x in range(1, PAPER_W - 1):
+        put(px, x0 + x, y0 + 1, PAPER_L if x % 2 == 0 else PAPER)
 
 
 def draw_wrench(px, cx, cy, direction):
@@ -145,7 +143,10 @@ def main() -> None:
             else:
                 ox = 1
 
-            draw_blueprint(px, hands[0][0] + ox, hands[0][1] + oy, direction)
+            # 蓝图放两手中间，扳手在最外侧那只手
+            mid_x = sum(h[0] for h in hands) / len(hands)
+            mid_y = sum(h[1] for h in hands) / len(hands)
+            draw_blueprint(px, mid_x + ox, mid_y + oy, direction)
             draw_wrench(px, hands[-1][0] + ox, hands[-1][1] + oy, direction)
 
             out.paste(frame, (i * 32, 0))
