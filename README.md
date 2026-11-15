@@ -107,6 +107,7 @@ C:\game\test
 │   ├─ make_furniture.lua     生成 4 件基地家具贴图
 │   ├─ make_workbench.lua     生成工作台（32×16）
 │   ├─ make_resources.lua     生成布料 / 绳子掉落物
+│   ├─ fix_legs.py            把角色表的腿加长一行、脚改小（靴子缩一行 + 削窄）
 │   ├─ make_hydrant.lua       生成消防栓（16×16）
 │   ├─ make_water.lua         生成水花 + 水洼动画帧
 │   ├─ make_bed.lua           生成床（16×32）
