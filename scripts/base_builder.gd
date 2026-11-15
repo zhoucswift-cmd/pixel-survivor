@@ -242,7 +242,7 @@ func _update_ghost() -> void:
 
 func _load_types() -> void:
 	# 固定顺序，保证 1-4 对应工作台 / 储物箱 / 发电机 / 盆栽
-	for file in ["workbench", "storage", "generator", "plant", "bed"]:
+	for file in ["bed"]:
 		var res: BaseFurniture = load("res://assets/base/%s.tres" % file)
 		if res != null:
 			types.append(res)
