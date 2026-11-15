@@ -21,6 +21,10 @@
 | **鼠标左键** | 开火（朝鼠标方向；霰弹枪单发，步枪按住连发） |
 | **R** | 换弹（3 秒；打空也会自动换） |
 | **按住 Tab** | 暂停游戏并打开武器轮盘，鼠标指向槽位、松开装备 |
+| **B** | 在草地（战斗区）和基地（楼顶平台）之间切换 |
+| **1 / 2 / 3 / 4** | 基地里选择要建造的家具 |
+| **鼠标左键 / 右键** | 基地里放置 / 拆除家具 |
+| **U** | 基地里升级鼠标指着的那件家具 |
 
 ## 目录结构
 
@@ -83,12 +87,17 @@ C:\game\test
 │       └─ shotgun_icon.png      图标图（20×20）
 ├─ tiled\
 │   ├─ grass.tsx              Tiled 瓦片集（含 Grass 地形与权重）
-│   └─ meadow.tmj             ★ 20×20 草地场景（地面层 + 建筑预留对象层）
+│   ├─ meadow.tmj             ★ 20×20 草地场景（地面层 + 建筑预留对象层）
+│   ├─ base.tsx               基地瓦片集（水泥 16 块）
+│   └─ base.tmj               ★ 30×30 楼顶平台（地面层 + 家具层 + 出生点）
 ├─ tools\
 │   ├─ make_character.lua     生成角色 + 持枪姿势 + 射击后坐帧
 │   ├─ make_muzzle.lua        生成枪口火焰 3 帧（爆闪 / 收缩 / 硝烟）
 │   ├─ make_crosshair.lua     生成准心 2 帧
 │   ├─ make_grass.lua         生成 16 块草皮瓦片 + 2 块井盖
+│   ├─ make_concrete.lua      生成 16 块水泥瓦片（楼顶基地）
+│   ├─ make_furniture.lua     生成 4 件基地家具贴图
+│   ├─ make_base_map.py       生成基地 TileSet + base.tsx/base.tmj
 │   ├─ make_hud.lua           生成血条外框与填充图
 │   ├─ make_weapon_icon.lua   生成武器图标（霰弹枪 20×20）
 │   ├─ export_nogun.lua       导出不带 gun 图层的角色精灵表
@@ -523,6 +532,35 @@ after 3.5s-> 0 只（确认不再刷）
   再加武器：往 `weapons` 里多放 `.tres`（带 `icon`）即可。
 - 换枪时弹药重置为满匣（简单处理），HUD 的弹量会立刻刷新。
 - 调试：`main.gd` 的 `--shot` 模式最后会调用 `open_wheel()` 拍一张轮盘截图。
+
+## 基地（楼顶平台 + 建造系统）
+
+![基地](docs/screenshots/base.png)
+
+按 **B** 从草地进到基地。基地是 **30×30 格（480×480 像素）的水泥楼顶平台**，数据全在 Tiled 里：
+
+- `tiled/base.tmj` 30×30：
+  - 地面层：水泥瓦片（4 种斑驳变化 + 裂缝 / 排水格栅 / 暗色块）随机铺满；
+  - 四周一圈**女儿墙**（parapet，瓦片 7–12），地图边缘就是楼顶边缘；
+  - 楼顶原有的设备：楼梯舱口（出生点）、空调外机、通风口；
+  - `Spawns` 层：`base_spawn` 点，玩家从舱口出来。
+- 瓦片：`assets/tiles/concrete_tiles.png`（128×32，16 块），由 `tools/make_concrete.lua` 生成，
+  `tools/make_base_map.py` 再生成 Godot 的 `concrete_tileset.tres` 和 Tiled 的 `base.tsx/base.tmj`。
+
+![整张平台](docs/base_platform.png)
+- 加载方式和草地一样：`meadow.gd` 读 `.tmj` 填 `TileMapLayer`，**Tiled 改完直接生效**。
+
+### 建造 / 摆放家具
+
+- 家具数据是 `BaseFurniture` 资源（`assets/base/*.tres`）：名字、贴图、`max_level`。
+  现有 4 件：工作台 / 储物箱 / 发电机 / 盆栽。
+- `base_builder.gd`：
+  - **1–4** 选家具（底部 HUD 高亮），鼠标位置显示半透明预览（绿色可放、红色不可放）；
+  - **左键**放置、**右键**拆除、**U** 升级（最高 3 级，底部小方块表示等级）；
+  - 全部按 **16px 格子**对齐；女儿墙外、楼顶设备瓦片（舱口/空调/通风口）上不能放；
+  - 布局自动存到 `user://base_layout.json`，下次进基地自动还原。
+- 加新家具：`assets/base/` 里再做一张 16×16 贴图和对应 `.tres`，然后在
+  `base_builder.gd` 的 `_load_types()` 列表里加一行即可（槽位自动多一个）。
 
 ## 关键实现
 
