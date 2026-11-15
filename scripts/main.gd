@@ -7,6 +7,7 @@ extends Node2D
 @onready var _player: CharacterBody2D = $Player
 @onready var _spawner: Node2D = $ZombieSpawner
 @onready var _crosshair: CanvasLayer = $Crosshair
+@onready var _travel_label: Label = $HUD/Travel
 @onready var _meadow: Node2D = $Meadow
 @onready var _grid: Node2D = $Grid
 @onready var _health_bar: Control = $HUD/Health
@@ -41,7 +42,21 @@ func _ready() -> void:
 		_spawner.start(_meadow)
 
 
+## 草地是 20x20 格，离边界 2 格内可以回基地
+const EDGE_MARGIN := 2
+const MEADOW_BOARD := 20
+
+
+func at_edge() -> bool:
+	var cell := Vector2i(floori(_player.position.x / 16.0), floori(_player.position.y / 16.0))
+	return cell.x <= EDGE_MARGIN or cell.y <= EDGE_MARGIN \
+		or cell.x >= MEADOW_BOARD - 1 - EDGE_MARGIN or cell.y >= MEADOW_BOARD - 1 - EDGE_MARGIN
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("interact") and at_edge():
+		get_tree().change_scene_to_file("res://scenes/base.tscn")
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_H:
@@ -53,6 +68,9 @@ func _unhandled_input(event: InputEvent) -> void:
 ## 弹量/换弹状态每帧刷新（换弹时显示倒计时）
 func _process(_delta: float) -> void:
 	_ammo_label.text = _player.ammo_display()
+	var edge := at_edge()
+	_travel_label.visible = edge
+	_travel_label.text = "E - BACK TO BASE" if edge else ""
 	# 霰弹枪靠扇形提示，不显示准心（武器资源里的 show_crosshair）
 	_crosshair.visible = _player.weapon.show_crosshair
 
