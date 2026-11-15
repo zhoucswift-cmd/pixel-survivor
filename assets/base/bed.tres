@@ -8,5 +8,5 @@ script = ExtResource("1_type")
 display_name = "床"
 short_name = "BED"
 texture = ExtResource("2_tex")
-footprint = Vector2i(1, 2)
+footprint = Vector2i(2, 3)
 max_level = 3

@@ -1,9 +1,9 @@
 -- make_bed.lua
--- 生成基地的床：16x32（1 格宽 × 2 格高）
+-- 生成基地的床：32x48（2 格宽 × 3 格高，双人床）
 -- 运行: Aseprite.exe -b --script tools/make_bed.lua
 
 local OUT = "C:/game/test/assets/base/bed.aseprite"
-local W, H = 16, 32
+local W, H = 32, 48
 
 local pc = app.pixelColor
 local function rgb(r, g, b, a) return pc.rgba(r, g, b, a or 255) end
@@ -36,34 +36,42 @@ fill(0, 0, W - 1, H - 1, OUTLINE)
 
 -- 木质床架
 fill(1, 1, W - 2, H - 2, WOOD)
-fill(1, 1, W - 2, 3, WOOD_L)      -- 床头
-fill(1, H - 4, W - 2, H - 2, WOOD_D)  -- 床尾
+fill(1, 1, W - 2, 5, WOOD_L)          -- 床头板
+fill(1, H - 5, W - 2, H - 2, WOOD_D)  -- 床尾板
+fill(1, 1, 2, H - 2, WOOD_L)          -- 左侧木边
+fill(W - 3, 1, W - 2, H - 2, WOOD_D)  -- 右侧木边
 
 -- 床垫（白）
-fill(2, 4, W - 3, H - 5, SHEET)
-fill(2, 4, W - 3, 4, SHEET_D)
+fill(3, 6, W - 4, H - 6, SHEET)
+fill(3, 6, W - 4, 6, SHEET_D)
 
--- 枕头（上方）
-fill(3, 6, W - 4, 11, PILLOW)
-fill(3, 11, W - 4, 11, PILLOW_D)
-put(3, 7, PILLOW_D)
-put(W - 4, 7, PILLOW_D)
+-- 两个枕头（上方并排）
+local pw = 12
+local py0, py1 = 8, 16
+fill(4, py0, 4 + pw - 1, py1, PILLOW)
+fill(W - 4 - pw, py0, W - 5, py1, PILLOW)
+fill(4, py1, 4 + pw - 1, py1, PILLOW_D)
+fill(W - 4 - pw, py1, W - 5, py1, PILLOW_D)
+-- 两个枕头之间的缝
+fill(W / 2 - 1, py0, W / 2, py1, PILLOW_D)
+-- 枕头缝线
+put(4, py0, PILLOW_D)
+put(4 + pw - 1, py0, PILLOW_D)
+put(W - 4 - pw, py0, PILLOW_D)
+put(W - 5, py0, PILLOW_D)
 
 -- 被子（下半段）
-fill(2, 13, W - 3, H - 5, BLANKET)
-fill(2, 13, W - 3, 14, BLANKET_L)
-fill(2, 15, W - 3, 15, BLANKET_D)
-fill(2, H - 6, W - 3, H - 5, BLANKET_D)
--- 被子的褶皱
-fill(5, 17, 5, H - 7, BLANKET_D)
-fill(10, 19, 10, H - 7, BLANKET_D)
-fill(3, 22, W - 4, 22, BLANKET_D)
-
--- 四角木纹高光
-put(1, 4, WOOD_L)
-put(W - 2, 4, WOOD_L)
-put(1, H - 5, WOOD_D)
-put(W - 2, H - 5, WOOD_D)
+local by0 = 19
+fill(3, by0, W - 4, H - 7, BLANKET)
+fill(3, by0, W - 4, by0 + 1, BLANKET_L)
+fill(3, by0 + 2, W - 4, by0 + 2, BLANKET_D)
+fill(3, H - 8, W - 4, H - 7, BLANKET_D)
+-- 被子褶皱
+fill(W / 2 - 1, by0 + 4, W / 2 - 1, H - 9, BLANKET_D)
+fill(W / 2, by0 + 4, W / 2, H - 9, BLANKET_D)
+fill(6, by0 + 9, 6, H - 10, BLANKET_D)
+fill(W - 7, by0 + 7, W - 7, H - 10, BLANKET_D)
+fill(4, by0 + 14, W - 5, by0 + 14, BLANKET_D)
 
 local spr = Sprite(W, H, ColorMode.RGB)
 spr.layers[1].name = "bed"
