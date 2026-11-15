@@ -55,6 +55,8 @@ func at_edge() -> bool:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact") and at_edge():
+		# 回到基地时出现在楼梯上
+		GameState.base_spawn_at_stairs = true
 		get_tree().change_scene_to_file("res://scenes/base.tscn")
 		return
 	if event is InputEventKey and event.pressed and not event.echo:

@@ -6,6 +6,7 @@ extends Node2D
 @onready var _player: CharacterBody2D = $Player
 @onready var _builder: Node2D = $Builder
 @onready var _palette: Control = $HUD/Palette
+@onready var _travel: Label = $HUD/Travel
 
 ## 离女儿墙多少格之内算“到边上了”
 const EDGE_MARGIN := 2
@@ -15,9 +16,14 @@ const STAIRS_RECT := Rect2(416, 336, 48, 80)
 
 
 func _ready() -> void:
-	# 出生点来自 Tiled 的 Spawns 层
-	var spawn: Dictionary = _map.get_spawn("base_spawn")
-	_player.position = spawn.get("position", Vector2(240, 340))
+	if GameState.base_spawn_at_stairs:
+		# 刚从草地回来：直接站在楼梯上
+		GameState.base_spawn_at_stairs = false
+		_player.position = STAIRS_RECT.get_center() + Vector2(0, 12)
+	else:
+		# 出生点来自 Tiled 的 Spawns 层
+		var spawn: Dictionary = _map.get_spawn("base_spawn")
+		_player.position = spawn.get("position", Vector2(240, 340))
 
 	# 基地是 30x30 格 = 480x480：放宽玩家活动范围和相机限制
 	_player.bounds = Rect2(24, 24, 432, 432)
@@ -54,6 +60,13 @@ func _unhandled_input(event: InputEvent) -> void:
 ## 玩家是不是站在楼梯里
 func in_stairs() -> bool:
 	return STAIRS_RECT.has_point(_player.position)
+
+
+func _process(_delta: float) -> void:
+	# 站进楼梯里才提示按 E 下楼
+	var inside := in_stairs()
+	_travel.visible = inside
+	_travel.text = "E - GO DOWN" if inside else ""
 
 
 ## 玩家是不是走到了平台边缘
