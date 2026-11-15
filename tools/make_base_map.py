@@ -12,16 +12,18 @@ ROOT = Path(r"C:\game\test")
 TILE = 16
 SIZE = 30
 
-# 瓦片编号（和 tools/make_concrete.lua 对应）
-FLOOR = [0, 1, 2, 3, 6]      # 水泥地面变化
-GRATE = 4                    # 排水格栅
-DARK = 5                     # 暗色地面
-PARAPET_H = 7
-PARAPET_V = 8
-CORNER_TL, CORNER_TR, CORNER_BL, CORNER_BR = 9, 10, 11, 12
-HATCH = 13
-AC = 14
-VENT = 15
+# 瓦片编号（和 tools/make_concrete.lua 对应，共 24 块）
+FLOOR = [0, 1, 2, 3, 6, 18, 19, 20, 21, 22, 23]   # 水泥地面变化（都是同一色调）
+GRATE = 4                                          # 排水格栅
+DARK = 5                                           # 暗色地面
+PARAPET_TOP = 7
+PARAPET_BOTTOM = 8
+PARAPET_LEFT = 9
+PARAPET_RIGHT = 10
+CORNER_TL, CORNER_TR, CORNER_BL, CORNER_BR = 11, 12, 13, 14
+HATCH = 15
+AC = 16
+VENT = 17
 
 PLAYER_SPAWN_CELL = (15, 22)
 
@@ -36,7 +38,7 @@ def build_tileset_tres() -> str:
         'texture = ExtResource("1_conc")',
         "texture_region_size = Vector2i(16, 16)",
     ]
-    for i in range(16):
+    for i in range(24):
         lines.append(f"{i % 8}:{i // 8}/0 = 0")
     lines += [
         "",
@@ -50,8 +52,8 @@ def build_tileset_tres() -> str:
 
 def build_tsx() -> str:
     return """<?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.12.2" name="base" tilewidth="16" tileheight="16" spacing="0" margin="0" tilecount="16" columns="8">
- <image source="../assets/tiles/concrete_tiles.png" width="128" height="32"/>
+<tileset version="1.10" tiledversion="1.12.2" name="base" tilewidth="16" tileheight="16" spacing="0" margin="0" tilecount="24" columns="8">
+ <image source="../assets/tiles/concrete_tiles.png" width="128" height="48"/>
 </tileset>
 """
 
@@ -64,20 +66,20 @@ def build_map() -> dict:
     for y in range(SIZE):
         for x in range(SIZE):
             r = rng.random()
-            if r < 0.06:
+            if r < 0.02:
                 tile = GRATE
-            elif r < 0.12:
+            elif r < 0.04:
                 tile = DARK
             else:
                 tile = rng.choice(FLOOR)
             data[y][x] = tile + 1  # firstgid = 1
 
-    # 四周女儿墙
+    # 四周女儿墙（四条边各自的朝向，角上单独处理）
     for i in range(SIZE):
-        data[0][i] = PARAPET_H + 1
-        data[SIZE - 1][i] = PARAPET_H + 1
-        data[i][0] = PARAPET_V + 1
-        data[i][SIZE - 1] = PARAPET_V + 1
+        data[0][i] = PARAPET_TOP + 1
+        data[SIZE - 1][i] = PARAPET_BOTTOM + 1
+        data[i][0] = PARAPET_LEFT + 1
+        data[i][SIZE - 1] = PARAPET_RIGHT + 1
     data[0][0] = CORNER_TL + 1
     data[0][SIZE - 1] = CORNER_TR + 1
     data[SIZE - 1][0] = CORNER_BL + 1

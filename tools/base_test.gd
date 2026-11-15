@@ -16,8 +16,8 @@ func _initialize() -> void:
 	var cells := ground.get_used_cells()
 	var size := int(round(sqrt(float(cells.size()))))
 	# 女儿墙 = 最外圈那 4*30-4 格，瓦片编号 7-12
-	var parapet_atlas := [Vector2i(7, 0), Vector2i(0, 1), Vector2i(1, 1),
-		Vector2i(2, 1), Vector2i(3, 1), Vector2i(4, 1)]
+	var parapet_atlas := [Vector2i(7, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1),
+		Vector2i(3, 1), Vector2i(4, 1), Vector2i(5, 1), Vector2i(6, 1)]
 	var parapet := 0
 	for cell: Vector2i in cells:
 		if cell.x == 0 or cell.y == 0 or cell.x == size - 1 or cell.y == size - 1:

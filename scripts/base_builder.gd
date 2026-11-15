@@ -8,8 +8,8 @@ signal layout_changed()
 const TILE := 16.0
 const SAVE_PATH := "user://base_layout.json"
 const PLACED_SCENE := preload("res://scenes/placed_furniture.tscn")
-## 这些瓦片是楼顶原有设备（舱口 / 空调 / 通风口），不能往上摆东西
-const BLOCKED_TILES := [Vector2i(5, 1), Vector2i(6, 1), Vector2i(7, 1)]
+## 这些瓦片是楼顶原有设备（舱口 #15 / 空调 #16 / 通风口 #17），不能往上摆东西
+const BLOCKED_TILES := [Vector2i(7, 1), Vector2i(0, 2), Vector2i(1, 2)]
 
 ## 可建造的家具（留空就自动加载 assets/base/*.tres）
 @export var types: Array[BaseFurniture] = []
@@ -31,6 +31,7 @@ func setup(map: Node2D, player: Node2D) -> void:
 		_load_types()
 
 	_ghost = Sprite2D.new()
+	_ghost.name = "Ghost"
 	_ghost.z_index = 6
 	_ghost.modulate = Color(1, 1, 1, 0.55)
 	add_child(_ghost)

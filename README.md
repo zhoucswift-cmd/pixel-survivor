@@ -544,10 +544,11 @@ after 3.5s-> 0 只（确认不再刷）
 
 - `tiled/base.tmj` 30×30：
   - 地面层：水泥瓦片（4 种斑驳变化 + 裂缝 / 排水格栅 / 暗色块）随机铺满；
-  - 四周一圈**女儿墙**（parapet，瓦片 7–12），地图边缘就是楼顶边缘；
+  - 四周一圈**女儿墙**：上下左右四种朝向（瓦片 7–10）+ 四个角（11–14），压顶连续、内侧带投影，
+    边缘不会出现断层；
   - 楼顶原有的设备：楼梯舱口（出生点）、空调外机、通风口；
   - `Spawns` 层：`base_spawn` 点，玩家从舱口出来。
-- 瓦片：`assets/tiles/concrete_tiles.png`（128×32，16 块），由 `tools/make_concrete.lua` 生成，
+- 瓦片：`assets/tiles/concrete_tiles.png`（128×48，**24 块**），由 `tools/make_concrete.lua` 生成，
   `tools/make_base_map.py` 再生成 Godot 的 `concrete_tileset.tres` 和 Tiled 的 `base.tsx/base.tmj`。
 
 ![整张平台](docs/base_platform.png)
