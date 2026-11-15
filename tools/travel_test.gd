@@ -31,13 +31,13 @@ func _initialize() -> void:
 
 	# 用 B 去草地（调试快捷键）
 	var evb := InputEventKey.new()
-	evb.keycode = KEY_B
-	evb.physical_keycode = KEY_B
+	evb.keycode = KEY_F2
+	evb.physical_keycode = KEY_F2
 	evb.pressed = true
 	Input.parse_input_event(evb)
 	for i in 8:
 		await process_frame
-	print("按 B 之后  -> %s" % current_scene.name)
+	print("按 F2 之后 -> %s" % current_scene.name)
 
 	# 草地边上按 E → 回基地
 	var meadow := current_scene

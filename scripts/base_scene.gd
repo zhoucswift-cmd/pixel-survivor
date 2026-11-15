@@ -85,9 +85,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if in_stairs():
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
 			return
-	# 基地边缘不再用 E 出地图（连提示都没有），只有 B 这个调试快捷键还能切场景
+	# 基地边缘不再用 E 出地图（连提示都没有），只有 F2 这个调试快捷键还能切场景
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_B:
+		if event.physical_keycode == KEY_F2:
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
