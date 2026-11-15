@@ -104,6 +104,7 @@ C:\game\test
 │   ├─ make_grass.lua         生成 16 块草皮瓦片 + 2 块井盖
 │   ├─ make_concrete.lua      生成 16 块水泥瓦片（楼顶基地）
 │   ├─ make_furniture.lua     生成 4 件基地家具贴图
+│   ├─ make_workbench.lua     生成工作台（32×16）
 │   ├─ make_hydrant.lua       生成消防栓（16×16）
 │   ├─ make_water.lua         生成水花 + 水洼动画帧
 │   ├─ make_bed.lua           生成床（32×48）
@@ -595,7 +596,7 @@ after 3.5s-> 0 只（确认不再刷）
 - **按 Tab 进 / 出建造模式**：不按 Tab 时就是纯走路，底部只有一行 `TAB - BUILD` 提示；
   按 Tab 才弹出底部家具栏，此时才能选家具、放置、拆除、升级。
 - 家具数据是 `BaseFurniture` 资源（`assets/base/*.tres`）：名字、贴图、`footprint`（占地几格）、`max_level`。
-  目前只有 **床（2×3，可升到 3 级）**。
+  目前两件：**床（2×3，可升到 3 级）** 和 **工作台（2×1，1 级）**。
 - 多格占地是通用的：`cells_for()` 把占地展开成格子列表，放/拆/预览/占位判断都按整块算，
   1×2 的床会同时占住上下两格，和别的家具重叠会被拒绝。
 - **右侧的楼梯**：`scenes/base.tscn` 里的 `Stairs` 节点（48×80，占 26..28 × 21..25 格）——
@@ -604,6 +605,9 @@ after 3.5s-> 0 只（确认不再刷）
   **从草地按 E 回基地时，玩家会直接出现在楼梯上**（`scripts/game_state.gd` 这个 autoload 传状态）；
   那 3×5 格不能摆家具
   （`base_builder.gd` 的 `blocked_cells`）。
+- **工作台（造东西）**：站到工作台旁边会提示 `E - CRAFT BED`，按 **E** 就往仓库里加一张床
+  （`base_scene.gd` 的 `_bench_near_player()` + `base_builder.add_stock()`）。
+  这样仓库里只剩 1 张床时，可以靠工作台继续造。
 - **消防栓（草地）**：`scenes/hydrant.tscn`，摆在草地 `(232, 104)`。被子弹打中（在武器的射程/扇形内）
   会喷水花 0.55 秒，随后在脚下铺开 **3×3 的水洼**（`water_puddle.png`，4 帧涟漪循环）。
   子弹判定在 `player.gd::_apply_shot_hits()` 里顺带检查 `hydrants` 组。

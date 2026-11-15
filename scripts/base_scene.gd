@@ -15,6 +15,8 @@ const BOARD := 30
 const STAIRS_RECT := Rect2(416, 336, 48, 80)
 ## 离床多远之内能按 E 躺上去
 const BED_REACH := 26.0
+## 离工作台多远之内能按 E 做东西
+const BENCH_REACH := 26.0
 
 var _sleeping_piece: Node2D = null
 var _wake_position := Vector2.ZERO
@@ -65,6 +67,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		if bed != null:
 			_lie_down(bed)
 			return
+		# 站在工作台旁边按 E 造一张床
+		if _bench_near_player() != null:
+			var bed_index: int = _builder.types.find(_bed_type())
+			_builder.add_stock(bed_index, 1)
+			return
 		# 走进楼梯里按 E 就下楼（去草地那张图）
 		if in_stairs():
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
@@ -85,6 +92,29 @@ func _bed_near_player() -> Node2D:
 		if int(piece.steps) % 2 == 1:
 			fp = Vector2(fp.y, fp.x)
 		var rect := Rect2(piece.position - fp * 0.5, fp).grow(BED_REACH)
+		if rect.has_point(_player.position):
+			return piece
+	return null
+
+
+## 第一个带“躺人贴图”的家具就是床（工作台造它）
+func _bed_type() -> BaseFurniture:
+	for data: BaseFurniture in _builder.types:
+		if data != null and data.occupied_texture != null:
+			return data
+	return _builder.types[0]
+
+
+## 玩家旁边的工作台（没有就返回 null）
+func _bench_near_player() -> Node2D:
+	for piece: Node2D in _builder.all_pieces():
+		var data: BaseFurniture = piece.data
+		if data == null or data.short_name != "BENCH":
+			continue
+		var fp := Vector2(data.footprint) * 16.0
+		if int(piece.steps) % 2 == 1:
+			fp = Vector2(fp.y, fp.x)
+		var rect := Rect2(piece.position - fp * 0.5, fp).grow(BENCH_REACH)
 		if rect.has_point(_player.position):
 			return piece
 	return null
@@ -132,6 +162,12 @@ func _process(_delta: float) -> void:
 	if _bed_near_player() != null:
 		_travel.visible = true
 		_travel.text = "E - SLEEP"
+		return
+
+	# 站在工作台旁边：提示造东西
+	if _bench_near_player() != null:
+		_travel.visible = true
+		_travel.text = "E - CRAFT BED"
 		return
 
 	# 站进楼梯里才提示按 E 下楼

@@ -121,6 +121,15 @@ func all_pieces() -> Array[Node2D]:
 	return out
 
 
+## 往仓库里加东西（工作台造东西用）
+func add_stock(index: int, amount := 1) -> void:
+	if index < 0 or index >= types.size():
+		return
+	_stock[index] = stock_of(index) + amount
+	layout_changed.emit()
+	_save_layout()
+
+
 ## 仓库里某种家具还剩几个
 func stock_of(index: int) -> int:
 	return int(_stock.get(index, 0))
@@ -466,7 +475,7 @@ func _update_ghost() -> void:
 
 func _load_types() -> void:
 	# 固定顺序，保证 1-4 对应家具
-	for file in ["bed"]:
+	for file in ["bed", "workbench"]:
 		var res: BaseFurniture = load("res://assets/base/%s.tres" % file)
 		if res != null:
 			types.append(res)
