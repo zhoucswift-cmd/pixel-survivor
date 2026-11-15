@@ -146,10 +146,21 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	if _ghost == null or selected_type() == null:
 		return
+
 	var cell := _mouse_cell()
+	# 鼠标不在平台格子里（比如飘到外面的城市上）就不显示预览
+	_ghost.visible = _in_board(cell)
+	if not _ghost.visible:
+		return
+
 	_ghost.position = _cell_center(cell)
 	_ghost.modulate = Color(1, 1, 1, 0.55) if is_buildable(cell) and not _pieces.has(cell) \
 		else Color(1, 0.45, 0.42, 0.5)
+
+
+## 是不是在 30x30 平台范围内
+func _in_board(cell: Vector2i) -> bool:
+	return cell.x >= 0 and cell.y >= 0 and cell.x < _board.x and cell.y < _board.y
 
 
 ## HUD 用的鼠标所在格
