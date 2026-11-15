@@ -111,7 +111,7 @@ func _refresh_stats() -> void:
 	if scene != null:
 		_player = scene.get_node_or_null("Player")
 	_atk = 0
-	_def = 0
+	_def = int(_gs.total_defense()) if _gs != null else 0
 	_speed = 100
 	if _player != null:
 		var weapon = _player.weapon
@@ -215,10 +215,19 @@ func _process(_delta: float) -> void:
 	var vis := _visible_indices()
 	var hovered := -1
 	var mouse := get_local_mouse_position()
-	for slot in vis.size():
-		if _slot_rect(slot).has_point(mouse):
-			hovered = vis[slot]
+	# 先看装备栏（悬停已穿上的装备也能看详情）
+	for i in 7:
+		if _equip_rect(i).has_point(mouse):
+			var worn := _equipped_item(EQUIP_SLOTS[i])
+			if not worn.is_empty():
+				hovered = ITEMS.find(worn)
 			break
+	# 再看背包格子
+	if hovered < 0:
+		for slot in vis.size():
+			if _slot_rect(slot).has_point(mouse):
+				hovered = vis[slot]
+				break
 	if hovered != _selected:
 		_selected = hovered
 		queue_redraw()
@@ -303,6 +312,14 @@ func _draw() -> void:
 				draw_texture_rect(_textures[idx],
 					Rect2(r.position + Vector2(1, 1), Vector2(EQUIP - 2, EQUIP - 2)),
 					false, worn_item.get("tint", Color(1, 1, 1)))
+				# 底部耐久条
+				var id_now: String = worn_item["id"]
+				var dur := int(_gs.durability_of(id_now))
+				var dur_max := maxi(1, int(_gs.max_durability_of(id_now)))
+				var bar := Rect2(r.position + Vector2(2, EQUIP - 3), Vector2(EQUIP - 4, 2))
+				draw_rect(bar, Color(0, 0, 0, 0.55))
+				bar.size.x *= clampf(float(dur) / float(dur_max), 0.0, 1.0)
+				draw_rect(bar, Color(0.45, 0.85, 0.45, 1.0) if dur > dur_max / 3 else Color(0.9, 0.45, 0.2, 1.0))
 			continue
 		# 空格子中间一个小横线，表示没装备
 		draw_line(r.position + Vector2(5, EQUIP * 0.5), r.position + Vector2(EQUIP - 5, EQUIP * 0.5),
@@ -383,7 +400,16 @@ func _draw() -> void:
 				lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.78, 0.82, 0.9, 0.9))
 		if data.has("slot"):
 			var worn_now: bool = _gs != null and _gs.equipped.get(data["slot"], "") == data["id"]
-			draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + DETAIL.size.y - 24.0),
+			var eq_stats: Dictionary = GameState.EQUIP_STATS.get(data["id"], {})
+			draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + DETAIL.size.y - 46.0),
+				"DEF  +%d" % int(eq_stats.get("def", 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
+				Color(0.86, 0.92, 1.0, 0.95))
+			var dur_v := int(_gs.durability_of(data["id"])) if _gs != null and _gs.owns(data["id"]) else int(eq_stats.get("dur", 0))
+			var dur_m := maxi(1, int(eq_stats.get("dur", 0)))
+			draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + DETAIL.size.y - 36.0),
+				"DUR  %d/%d" % [dur_v, dur_m], HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
+				Color(0.86, 0.92, 1.0, 0.95) if dur_v > dur_m / 3 else Color(0.95, 0.55, 0.4, 0.95))
+			draw_string(font, Vector2(DETAIL.position.x + 4.0, DETAIL.position.y + DETAIL.size.y - 20.0),
 				"EQUIPPED" if worn_now else "NOT WORN", HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
 				Color(0.95, 0.9, 0.7, 0.95) if worn_now else Color(0.7, 0.74, 0.84, 0.9))
 		else:

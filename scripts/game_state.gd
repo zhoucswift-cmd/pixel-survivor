@@ -18,6 +18,17 @@ var equipped := {
 ## 已经做出来的可穿戴物（id -> true）
 var owned := {}
 
+## 每件装备的防护值 / 耐久上限
+const EQUIP_STATS := {
+	"cloth_hat": {"def": 2, "dur": 40},
+	"tshirt": {"def": 3, "dur": 60},
+	"casual_pants": {"def": 3, "dur": 65},
+	"casual_shoes": {"def": 2, "dur": 45},
+}
+
+## 每件装备当前耐久（id -> int）
+var durability := {}
+
 ## 可穿戴物品的颜色（换装时就按这个颜色刷角色贴图）
 const ITEM_COLORS := {
 	"cloth_hat": Color8(198, 176, 128),
@@ -60,6 +71,8 @@ func owns(id: String) -> bool:
 
 func add_owned(id: String) -> void:
 	owned[id] = true
+	if EQUIP_STATS.has(id):
+		durability[id] = int(EQUIP_STATS[id]["dur"])
 
 
 ## 某个槽位当前穿的颜色（没穿返回透明）
@@ -72,10 +85,47 @@ func slot_color(slot: String) -> Color:
 
 func equip(slot: String, id: String) -> void:
 	equipped[slot] = id
+	if EQUIP_STATS.has(id) and not durability.has(id):
+		durability[id] = int(EQUIP_STATS[id]["dur"])
 
 
 func unequip(slot: String) -> void:
 	equipped[slot] = ""
+
+
+## 总防护值（各槽位相加）
+func total_defense() -> int:
+	var total := 0
+	for slot: String in equipped:
+		var id: String = equipped[slot]
+		if id != "" and EQUIP_STATS.has(id):
+			total += int(EQUIP_STATS[id]["def"])
+	return total
+
+
+## 某件装备当前耐久 / 上限
+func durability_of(id: String) -> int:
+	return int(durability.get(id, 0))
+
+
+func max_durability_of(id: String) -> int:
+	return int(EQUIP_STATS.get(id, {}).get("dur", 0))
+
+
+## 受击磨损：每件装备各掉 amount 点，耐久归零就消失；返回坏掉的 id
+func wear_equipment(amount := 1) -> Array:
+	var broken := []
+	for slot: String in equipped:
+		var id: String = equipped[slot]
+		if id == "" or not EQUIP_STATS.has(id):
+			continue
+		durability[id] = maxi(0, durability_of(id) - amount)
+		if durability[id] <= 0:
+			equipped[slot] = ""
+			owned.erase(id)
+			durability.erase(id)
+			broken.append(id)
+	return broken
 
 
 ## 装备状态签名（玩家用它判断要不要重新刷贴图）

@@ -547,7 +547,16 @@ func equip(index: int) -> void:
 func take_damage(amount: float) -> void:
 	if _dead or _invulnerable > 0.0:
 		return
-	set_health(health - amount)
+	var gs := get_node_or_null("/root/GameState")
+	var real := amount
+	if gs != null:
+		# 防护值直接减免伤害
+		real = maxf(amount - float(gs.total_defense()), 0.0)
+		# 每次挨打，身上每件装备都掉一点耐久
+		var broken: Array = gs.wear_equipment(1)
+		if not broken.is_empty():
+			apply_equipment()   # 有装备坏了，外观跟着变
+	set_health(health - real)
 
 
 func heal(amount: float) -> void:
