@@ -92,9 +92,9 @@ fill(3, 3, W - 4, H - 4, SHADE)
 speckle(3, 3, W - 4, H - 4, { OUTLINE, DARK }, 0.08)
 
 -- ============ 3. 台阶（7 级，越往下越暗） ============
-local steps = 7
+local steps = 8
 local top = 6
-local bottom = 56
+local bottom = 66
 local step_h = math.floor((bottom - top) / steps)
 for i = 0, steps - 1 do
 	local y0 = top + i * step_h
@@ -130,60 +130,22 @@ for i = 0, steps - 1 do
 	end
 end
 
--- ============ 4. 楼梯底部：平台 + 一扇铁门 ============
--- 底部的水泥平台
-fill(4, bottom, W - 5, H - 5, DARK)
-speckle(4, bottom, W - 5, H - 5, { MID, SHADE, LIGHT }, 0.08)
-fill(4, bottom, W - 5, bottom + 1, MID)
-fill(4, H - 5, W - 5, H - 5, SHADE)
+-- ============ 4. 楼梯尽头：往下拐进暗处 ============
+-- 2D 俯视看不到门，这里就画成楼梯尽头的一小段平台 + 黑
+fill(4, bottom, W - 5, bottom + 2, DARK)
+speckle(4, bottom, W - 5, bottom + 2, { MID, SHADE, LIGHT }, 0.10)
+fill(4, bottom, W - 5, bottom, MID)
 
--- 门洞（居中，18 宽）
-local dx0, dx1 = 14, 34
-local dy0, dy1 = bottom + 3, H - 8
+-- 洞口（越往下越黑）
+fill(4, bottom + 3, W - 5, H - 5, HOLE3)
+fill(5, bottom + 4, W - 6, H - 6, HOLE2)
+fill(6, bottom + 6, W - 7, H - 7, HOLE)
+fill(10, bottom + 8, W - 11, H - 8, rgb(16, 16, 20))
 
--- 门框（金属，外亮内暗）
-fill(dx0 - 2, dy0 - 2, dx1 + 2, dy1 + 2, METAL_D)
-fill(dx0 - 2, dy0 - 2, dx1 + 2, dy0 - 1, METAL)
-fill(dx0 - 2, dy0 - 2, dx0 - 1, dy1 + 2, METAL_L)
-fill(dx1 + 1, dy0 - 2, dx1 + 2, dy1 + 2, METAL_D)
-
--- 门里：下面是下层透上来的暖光（分层渐变，越靠下越亮）
-fill(dx0, dy0, dx1, dy1, HOLE)
-for y = dy0 + 1, dy1 do
-	local k = (y - dy0) / (dy1 - dy0)
-	local r = 24 + 96 * k * k
-	local g = 22 + 74 * k * k
-	local b = 28 + 40 * k * k
-	fill(dx0 + 1, y, dx1 - 1, y, rgb(r, g, b))
-end
--- 光里飘的灰（很淡）
-speckle(dx0 + 2, dy0 + 4, dx1 - 2, dy1 - 1, { rgb(60, 50, 34), rgb(90, 74, 46) }, 0.12)
-
--- 门扇：向外开着，贴在门洞左边
-local leaf = 9
-for y = dy0, dy1 do
-	for x = dx0 + 1, dx0 + leaf do
-		local c = DOOR
-		if x == dx0 + 1 then c = DOOR_L end
-		if x == dx0 + leaf then c = DOOR_D end
-		put(x, y, c)
-	end
-end
--- 门板上的两道压线
-for y = dy0 + 2, dy1 - 2 do
-	put(dx0 + 3, y, DOOR_D)
-	put(dx0 + leaf - 2, y, DOOR_D)
-end
-fill(dx0 + 2, dy0 + 1, dx0 + leaf - 1, dy0 + 1, DOOR_L)
--- 合页
-put(dx0 + 1, dy0 + 2, METAL_D)
-put(dx0 + 1, dy1 - 2, METAL_D)
--- 把手
-fill(dx0 + leaf - 2, dy0 + 8, dx0 + leaf - 1, dy0 + 9, METAL_L)
--- 门下漏光
-for x = dx0 + leaf + 1, dx1 - 1 do
-	if rnd() > 0.4 then put(x, dy1 - 1, rgb(96, 78, 48)) end
-end
+-- 洞口边缘的一点反光，显得是往下走
+fill(6, bottom + 3, W - 7, bottom + 3, rgb(74, 78, 92))
+fill(6, bottom + 4, 7, bottom + 8, rgb(60, 64, 78))
+fill(W - 8, bottom + 4, W - 7, bottom + 7, rgb(56, 60, 74))
 
 -- ============ 5. 两侧栏杆 + 螺栓 / 锈 ============
 for y = 4, bottom + 1 do
