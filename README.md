@@ -613,8 +613,9 @@ after 3.5s-> 0 只（确认不再刷）
   **面板里暂时不列建筑和配方**，只显示 `NO RECIPES YET`，等做了配方表再往里填。
 - **击杀掉落**：普通僵尸死亡时独立判定 —— **25% 掉 1 个布料**、**10% 掉 1 个绳子**
   （`zombie.gd::_die()`，400 只实测 24.5% / 10.8%）。掉落物是 `scenes/pickup.tscn`（Area2D，
-  上下轻浮），玩家走过去自动捡起，数量存在 `GameState.cloth / rope`，草地右上角 HUD 显示
-  `CLOTH n  ROPE n`。
+  上下轻浮、**画在血迹上面**（掉落物 `z_index = 3`，血迹是 2），头顶暂时显示物品名字 `CLOTH` / `ROPE`
+  （以后换成图标就能删掉这个 Label）；玩家走过去自动捡起，数量存在 `GameState.cloth / rope`，
+  草地右上角 HUD 显示 `CLOTH n  ROPE n`。
 - **消防栓（草地）**：`scenes/hydrant.tscn`，摆在草地 `(232, 104)`。被子弹打中（在武器的射程/扇形内）
   会喷水花 0.55 秒，随后在脚下铺开 **3×3 的水洼**（`water_puddle.png`，4 帧涟漪循环）。
   子弹判定在 `player.gd::_apply_shot_hits()` 里顺带检查 `hydrants` 组。

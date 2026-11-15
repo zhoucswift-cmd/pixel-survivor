@@ -1,20 +1,29 @@
 extends Area2D
 ## 地上的掉落物：玩家走过去自动捡起，加到 GameState 的背包里。
+## 画在血迹上面（z_index 3），上方暂时显示物品名字。
 
 const TEXTURES := {
 	"cloth": "res://assets/base/cloth.png",
 	"rope": "res://assets/base/rope.png",
+}
+const COLORS := {
+	"cloth": Color(0.96, 0.94, 0.84, 0.95),
+	"rope": Color(1.0, 0.86, 0.6, 0.95),
 }
 
 @export var item := "cloth"
 
 var _t := 0.0
 @onready var _sprite: Sprite2D = $Sprite
+@onready var _name_label: Label = $Name
 
 
 func _ready() -> void:
 	if TEXTURES.has(item):
 		_sprite.texture = load(TEXTURES[item])
+	if COLORS.has(item):
+		_name_label.add_theme_color_override("font_color", COLORS[item])
+	_name_label.text = item.to_upper()
 	_t = randf() * TAU
 	body_entered.connect(_on_body_entered)
 
