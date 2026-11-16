@@ -118,7 +118,9 @@ func _unhandled_input(event: InputEvent) -> void:
 ## 弹量/换弹状态每帧刷新（换弹时显示倒计时）
 func _process(_delta: float) -> void:
 	_ammo_label.text = _player.ammo_display()
-	_items_label.text = "CLOTH %d   ROPE %d   STONE %d   WOOD %d" % [GameState.cloth, GameState.rope, GameState.stone, GameState.wood]
+	_items_label.text = "CLOTH %d   ROPE %d   STONE %d\nWOOD %d   GRASS %d   FLOWER %d" % [
+		GameState.cloth, GameState.rope, GameState.stone,
+		GameState.wood, GameState.grass, GameState.flower]
 	var edge := at_edge()
 	_travel_label.visible = edge
 	_travel_label.text = "E - BACK TO BASE" if edge else ""

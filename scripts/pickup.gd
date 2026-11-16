@@ -7,12 +7,16 @@ const TEXTURES := {
 	"rope": "res://assets/base/rope.png",
 	"stone": "res://assets/base/stone.png",
 	"wood": "res://assets/base/wood.png",
+	"grass": "res://assets/base/grass.png",
+	"flower": "res://assets/base/flower.png",
 }
 const COLORS := {
 	"cloth": Color(0.96, 0.94, 0.84, 0.95),
 	"rope": Color(1.0, 0.86, 0.6, 0.95),
 	"stone": Color(0.86, 0.88, 0.92, 0.95),
 	"wood": Color(0.94, 0.78, 0.56, 0.95),
+	"grass": Color(0.72, 0.95, 0.62, 0.95),
+	"flower": Color(1.0, 0.76, 0.86, 0.95),
 }
 
 @export var item := "cloth"

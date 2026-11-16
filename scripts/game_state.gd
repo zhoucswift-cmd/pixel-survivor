@@ -8,6 +8,8 @@ var cloth := 0
 var rope := 0
 var stone := 0
 var wood := 0
+var grass := 0
+var flower := 0
 
 ## 装备栏：每个槽位放的是哪件物品 id（空字符串 = 没穿）
 ## 开局就穿着布帽 / T恤 / 长裤 / 布鞋
@@ -63,6 +65,10 @@ func add_item(item: String, amount := 1) -> void:
 			stone += amount
 		"wood":
 			wood += amount
+		"grass":
+			grass += amount
+		"flower":
+			flower += amount
 
 
 func reset_items() -> void:
@@ -70,6 +76,8 @@ func reset_items() -> void:
 	rope = 0
 	stone = 0
 	wood = 0
+	grass = 0
+	flower = 0
 
 
 ## 够不够付这份材料

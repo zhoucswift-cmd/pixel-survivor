@@ -24,6 +24,16 @@ const ITEMS := [
 		"desc": ["Cut logs.", "Used for building."],
 	},
 	{
+		"id": "grass", "name": "GRASS", "type": "MATERIAL",
+		"tex": "res://assets/base/grass.png",
+		"desc": ["Fresh green grass.", "Used for crafting."],
+	},
+	{
+		"id": "flower", "name": "FLOWER", "type": "MATERIAL",
+		"tex": "res://assets/base/flower.png",
+		"desc": ["A small wild flower.", "Used for crafting."],
+	},
+	{
 		"id": "casual_hat", "name": "CASUAL HAT", "type": "EQUIP", "slot": "hat",
 		"tex": "res://assets/base/icon_hat.png", "tint": Color8(198, 176, 128),
 		"desc": ["A casual cloth cap.", "Click to wear it."],
