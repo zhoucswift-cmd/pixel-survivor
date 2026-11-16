@@ -178,8 +178,6 @@ func _die() -> void:
 		_spawn_drop("cloth")
 	if randf() < 0.10:
 		_spawn_drop("rope")
-	if randf() < 0.20:
-		_spawn_drop("wood")
 
 	queue_free()
 
