@@ -182,10 +182,6 @@ func _die() -> void:
 		_spawn_drop("wood")
 	if randf() < 0.15:
 		_spawn_drop("stone")
-	if randf() < 0.18:
-		_spawn_drop("grass")
-	if randf() < 0.12:
-		_spawn_drop("flower")
 
 	queue_free()
 
