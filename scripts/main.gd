@@ -25,6 +25,37 @@ const AIM_BY_NAME := {
 
 ## 玩家出生点（死亡后回到这里）
 var player_start := Vector2(160, 160)
+
+## 场景道具（树 / 灌木 / 蘑菇 / 木头 / 芦苇 / 石头 / 水塘），坐标是「贴图底部中心」
+const PROP_SCENE := preload("res://scenes/prop.tscn")
+const PROPS := [
+	# 四周的树
+	{"tex": "res://assets/forest/tree_a.png", "pos": Vector2(26, 54), "collide": Vector2(18, 10)},
+	{"tex": "res://assets/forest/tree_b.png", "pos": Vector2(84, 36), "collide": Vector2(18, 10)},
+	{"tex": "res://assets/forest/tree_c.png", "pos": Vector2(150, 30), "collide": Vector2(18, 10)},
+	{"tex": "res://assets/forest/tree_a.png", "pos": Vector2(214, 34), "collide": Vector2(18, 10)},
+	{"tex": "res://assets/forest/tree_c.png", "pos": Vector2(288, 58), "collide": Vector2(18, 10)},
+	{"tex": "res://assets/forest/tree_b.png", "pos": Vector2(20, 142), "collide": Vector2(18, 10)},
+	{"tex": "res://assets/forest/tree_a.png", "pos": Vector2(302, 152), "collide": Vector2(18, 10)},
+	{"tex": "res://assets/forest/tree_c.png", "pos": Vector2(34, 252), "collide": Vector2(18, 10)},
+	{"tex": "res://assets/forest/tree_b.png", "pos": Vector2(148, 308), "collide": Vector2(18, 10)},
+	{"tex": "res://assets/forest/tree_a.png", "pos": Vector2(282, 294), "collide": Vector2(18, 10)},
+	# 灌木 / 蘑菇 / 石头 / 圆木 / 芦苇
+	{"tex": "res://assets/forest/bush.png", "pos": Vector2(118, 108)},
+	{"tex": "res://assets/forest/bush.png", "pos": Vector2(206, 168)},
+	{"tex": "res://assets/forest/bush.png", "pos": Vector2(86, 212)},
+	{"tex": "res://assets/forest/mushrooms.png", "pos": Vector2(150, 130)},
+	{"tex": "res://assets/forest/mushrooms.png", "pos": Vector2(236, 96)},
+	{"tex": "res://assets/forest/mushrooms.png", "pos": Vector2(64, 168)},
+	{"tex": "res://assets/forest/rock.png", "pos": Vector2(186, 74), "collide": Vector2(18, 8)},
+	{"tex": "res://assets/forest/rock.png", "pos": Vector2(110, 260), "collide": Vector2(18, 8)},
+	{"tex": "res://assets/forest/log.png", "pos": Vector2(118, 198), "collide": Vector2(34, 12)},
+	{"tex": "res://assets/forest/reeds.png", "pos": Vector2(214, 264)},
+	{"tex": "res://assets/forest/reeds.png", "pos": Vector2(252, 218)},
+	# 水塘（永远在人物下面）
+	{"tex": "res://assets/forest/pond.png", "pos": Vector2(256, 270), "collide": Vector2(44, 40),
+		"collide_offset": Vector2(0, -20), "behind": true},
+]
 ## 截图模式下不跑刷怪器，避免僵尸乱入
 var _capture_mode := false
 
@@ -40,7 +71,23 @@ func _ready() -> void:
 	if _capture_mode:
 		await _capture_shots()
 	else:
+		_spawn_props()
 		_spawner.start(_meadow)
+
+
+## 把道具摆到草地上
+func _spawn_props() -> void:
+	var holder := Node2D.new()
+	holder.name = "Props"
+	add_child(holder)
+	for data: Dictionary in PROPS:
+		var p: Node2D = PROP_SCENE.instantiate()
+		p.set("tex_path", data["tex"])
+		p.set("collide", data.get("collide", Vector2.ZERO))
+		p.set("collide_offset", data.get("collide_offset", Vector2(0, -6)))
+		p.set("always_behind", data.get("behind", false))
+		p.position = data["pos"]
+		holder.add_child(p)
 
 
 ## 草地是 20x20 格，离边界 2 格内可以回基地
