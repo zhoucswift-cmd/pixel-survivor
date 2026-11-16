@@ -25,9 +25,6 @@ const AIM_BY_NAME := {
 
 ## 玩家出生点（死亡后回到这里）
 var player_start := Vector2(160, 160)
-## 草地上撒几棵树（截图模式不撒，画面干净）
-const TREE_SCENE := preload("res://scenes/tree.tscn")
-@export var tree_count := 7
 ## 截图模式下不跑刷怪器，避免僵尸乱入
 var _capture_mode := false
 
@@ -43,51 +40,7 @@ func _ready() -> void:
 	if _capture_mode:
 		await _capture_shots()
 	else:
-		_scatter_trees()
 		_spawner.start(_meadow)
-
-
-## 在草地上随机撒几棵绿化树：避开出生点、井盖、消防栓和彼此
-func _scatter_trees() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.randomize()
-
-	var used := {}
-	# 出生点附近 2 格不种
-	var start_cell := Vector2i(floori(player_start.x / 16.0), floori(player_start.y / 16.0))
-	for dy in range(-2, 3):
-		for dx in range(-2, 3):
-			used[start_cell + Vector2i(dx, dy)] = true
-	# 井盖附近 1 格不种
-	for spawn: Dictionary in _meadow.spawns:
-		if not String(spawn.get("name", "")).begins_with("well"):
-			continue
-		var p: Vector2 = spawn["position"]
-		var c := Vector2i(floori(p.x / 16.0), floori(p.y / 16.0))
-		for dy in range(-1, 2):
-			for dx in range(-1, 2):
-				used[c + Vector2i(dx, dy)] = true
-	# 消防栓位置不种
-	var hydrant := get_node_or_null("Hydrant")
-	if hydrant != null:
-		used[Vector2i(floori(hydrant.position.x / 16.0), floori(hydrant.position.y / 16.0))] = true
-
-	var placed := 0
-	var tries := 0
-	while placed < tree_count and tries < 400:
-		tries += 1
-		var cell := Vector2i(rng.randi_range(1, MEADOW_BOARD - 2), rng.randi_range(1, MEADOW_BOARD - 3))
-		if used.has(cell):
-			continue
-		used[cell] = true
-		var tree: Node2D = TREE_SCENE.instantiate()
-		# 每棵随机挑一张（幼苗 ~ 大枫树），纯装饰
-		tree.stage = rng.randi_range(1, 3)
-		# 树根落在格子底边中间，树冠往上 3 格
-		tree.position = Vector2(cell.x * 16.0 + 8.0, cell.y * 16.0 + 16.0)
-		add_child(tree)
-		placed += 1
-	print("草地种树：%d 棵" % placed)
 
 
 ## 草地是 20x20 格，离边界 2 格内可以回基地
