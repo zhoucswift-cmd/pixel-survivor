@@ -111,6 +111,7 @@ C:\game\test
 │   ├─ make_forest_grass.py   用 TopDownFantasy-Forest 的草皮重做 assets/tiles/grass_tiles.png
 │   ├─ make_forest_meadow.py  用同一套素材重画草地地图（草地 + 泥土小路 + 草丛）
 │   ├─ make_forest_props.py   从素材包抠场景道具（树/灌木/蘑菇/圆木/芦苇/石头/水塘）
+│   ├─ make_tiled_world.py    导出 Tiled 用的 props.tsx + 生成 100x100 的 world.tmj
 │   ├─ fix_legs.py            把角色表的腿加长一行、脚改小（靴子缩一行 + 削窄）
 │   ├─ make_hydrant.lua       生成消防栓（16×16）
 │   ├─ make_water.lua         生成水花 + 水洼动画帧
