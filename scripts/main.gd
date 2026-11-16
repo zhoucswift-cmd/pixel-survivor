@@ -81,28 +81,13 @@ func _scatter_trees() -> void:
 			continue
 		used[cell] = true
 		var tree: Node2D = TREE_SCENE.instantiate()
-		# 每棵随机一个生长阶段（幼苗 ~ 大枫树）
+		# 每棵随机挑一张（幼苗 ~ 大枫树），纯装饰
 		tree.stage = rng.randi_range(1, 3)
 		# 树根落在格子底边中间，树冠往上 3 格
 		tree.position = Vector2(cell.x * 16.0 + 8.0, cell.y * 16.0 + 16.0)
-		tree.add_to_group("trees")
 		add_child(tree)
 		placed += 1
 	print("草地种树：%d 棵" % placed)
-
-
-## 玩家旁边能砍的成熟余烬枫（最近的那棵，没有就 null）
-func _tree_near_player() -> Node2D:
-	var best: Node2D = null
-	var best_dist := INF
-	for tree in get_tree().get_nodes_in_group("trees"):
-		if not tree.can_chop():
-			continue
-		var d: float = tree.global_position.distance_to(_player.global_position)
-		if d <= 44.0 and d < best_dist:
-			best = tree
-			best_dist = d
-	return best
 
 
 ## 草地是 20x20 格，离边界 2 格内可以回基地
@@ -117,18 +102,11 @@ func at_edge() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("interact"):
-		# 旁边有成熟的余烬枫：砍它掉木头
-		var tree := _tree_near_player()
-		if tree != null:
-			var wood: int = tree.chop()
-			GameState.add_item("wood", wood)
-			return
-		if at_edge():
-			# 回到基地时出现在楼梯上
-			GameState.base_spawn_at_stairs = true
-			get_tree().change_scene_to_file("res://scenes/base.tscn")
-			return
+	if event.is_action_pressed("interact") and at_edge():
+		# 回到基地时出现在楼梯上
+		GameState.base_spawn_at_stairs = true
+		get_tree().change_scene_to_file("res://scenes/base.tscn")
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_H:
@@ -141,14 +119,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	_ammo_label.text = _player.ammo_display()
 	_items_label.text = "CLOTH %d   ROPE %d   STONE %d   WOOD %d" % [GameState.cloth, GameState.rope, GameState.stone, GameState.wood]
-	var tree_now := _tree_near_player()
-	if tree_now != null:
-		_travel_label.visible = true
-		_travel_label.text = "E - CHOP EMBER MAPLE"
-	else:
-		var edge := at_edge()
-		_travel_label.visible = edge
-		_travel_label.text = "E - BACK TO BASE" if edge else ""
+	var edge := at_edge()
+	_travel_label.visible = edge
+	_travel_label.text = "E - BACK TO BASE" if edge else ""
 	# 霰弹枪靠扇形提示，不显示准心（武器资源里的 show_crosshair）
 	_crosshair.visible = _player.weapon.show_crosshair
 
