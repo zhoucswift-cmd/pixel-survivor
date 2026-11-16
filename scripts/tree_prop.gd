@@ -28,7 +28,9 @@ func _process(_delta: float) -> void:
 	if _player == null:
 		return
 	# 玩家比树根低 = 站在树前面：树画在后面（-1）
-	# 玩家比树根高 = 站在树后面：树画在玩家前面（玩家 z_index 是 1，所以树用 2）
-	var want := -1 if _player.global_position.y + 6.0 > global_position.y else 2
+	# 玩家比树根高 = 站在树后面：树盖住玩家。
+	# 玩家 z_index 是 1，手里那把枪是子节点 z_index=2（实际 3），
+	# 所以树要用 4 才能连枪一起挡住；枪口火光(10)/瞄准线(9) 仍然在树上面。
+	var want := -1 if _player.global_position.y + 6.0 > global_position.y else 4
 	if want != z_index:
 		z_index = want
