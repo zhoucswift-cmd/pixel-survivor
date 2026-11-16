@@ -109,6 +109,7 @@ C:\game\test
 │   ├─ make_tree.lua          生成小街道绿化树（1×3 = 16×48）
 │   ├─ make_resources.lua     生成布料 / 绳子 / 石头 / 木头掉落物
 │   ├─ make_forest_grass.py   用 TopDownFantasy-Forest 的草皮重做 assets/tiles/grass_tiles.png
+│   ├─ make_forest_meadow.py  用同一套素材重画草地地图（草地 + 泥土小路 + 草丛）
 │   ├─ fix_legs.py            把角色表的腿加长一行、脚改小（靴子缩一行 + 削窄）
 │   ├─ make_hydrant.lua       生成消防栓（16×16）
 │   ├─ make_water.lua         生成水花 + 水洼动画帧
