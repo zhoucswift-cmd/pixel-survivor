@@ -107,14 +107,17 @@ def make_edge_tile(mask: int, rng: random.Random) -> Image.Image:
                 # 草地靠外亮、靠里暗一点
                 px[x, y] = GRASS + (255,)
 
-    # 草地内侧再压一条暗草边，看起来更厚
+    # 草地内侧再压一条暗草边，看起来更厚。
+    # 注意：贴图边界外的像素当作草地（不描边），否则每块贴图四周都会出现一圈直边阴影
     for y in range(16):
         for x in range(16):
             if px[x, y][:3] != GRASS:
                 continue
             for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0)):
                 nx, ny = x + dx, y + dy
-                if 0 <= nx < 16 and 0 <= ny < 16 and px[nx, ny][:3] == GRASS:
+                if not (0 <= nx < 16 and 0 <= ny < 16):
+                    continue          # 出界 = 还是草地
+                if px[nx, ny][:3] in (GRASS, GRASS_DARK):
                     continue
                 px[x, y] = GRASS_DARK + (255,)
                 break
