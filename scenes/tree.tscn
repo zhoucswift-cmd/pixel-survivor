@@ -1,21 +1,22 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/tree_prop.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/base/tree.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/base/ember_maple.png" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="1_shape"]
-size = Vector2(12, 10)
+size = Vector2(16, 10)
 
 [node name="Tree" type="Node2D"]
 script = ExtResource("1_script")
 
 [node name="Sprite" type="Sprite2D" parent="."]
 centered = false
-offset = Vector2(-8, -44)
+offset = Vector2(-16, -48)
+hframes = 5
 texture = ExtResource("2_tex")
 
 [node name="Body" type="StaticBody2D" parent="."]
 
 [node name="Shape" type="CollisionShape2D" parent="Body"]
-position = Vector2(0, -5)
+position = Vector2(0, -6)
 shape = SubResource("1_shape")
